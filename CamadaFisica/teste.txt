@@ -1,1 +1,4 @@
-gdgdsdg
+172.16.126.194
+ip_dest:172.16.126.194;ip_orig:172.16.126.227;
+porta_orig:20023;porta_dest:20023
+GET 172.16.126.194/index.html
