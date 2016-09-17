@@ -1,13 +1,15 @@
 require "readline"
+
 class Cliente
 	def initialize(interface)
-		@interface=interface	
+		@interface=interface
 	end
 
 	#FALTA IMPLEMENTAR: botei só um default aqui
 	def get_mac_address(ip)
-	    puts ip
-	    mac = "00:00:00:00:00:00"
+			response = `sh mac.sh #{ip} #{@interface}`
+			mac = response.split()[3]
+	    #mac = "00:00:00:00:00:00"
 	return mac
 
 	end
@@ -59,7 +61,7 @@ class Cliente
 				saida+="1111"
 			end
 		end
-		return saida 
+		return saida
 	end
 
 	def divideString(string, length)
@@ -85,25 +87,25 @@ class Cliente
 		end
 
 		#pega o IP do arquivo
-		ip = d[0].split("\n")[0];
+		ip = d[0].split("\n")[0].delete("\n");
 
 		#pega o dado do arquivo
 		dado = ""
 		for i in 0..d.size
-			dado += d[i].to_s 
+			dado += d[i].to_s
 		end
 
 		puts "Ip do destinatario: #{ip}"
 		puts "Dados: #{dado}"
 
 		#FALTA PEGAR O MAC DO DESTINO
-		macDestino = get_mac_address(ip) 
+		macDestino = get_mac_address(ip)
 		#PEGA O MAC do remetente de acordo com a interface usada
 		macOrigem = getMyMacAddress
 
-		puts "Mac do destinatario: #{macDestino}" 
+		puts "Mac do destinatario: #{macDestino}"
 		puts "Mac do remetente: #{macOrigem}"
-	
+
 		macDestino = macDestino.gsub(":","")
 		macOrigem = macOrigem.gsub(":","")
 
