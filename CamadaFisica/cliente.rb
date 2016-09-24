@@ -89,7 +89,9 @@ class Cliente
 		end
 
 		#pega o IP do arquivo
-		ip = d[0].split("\n")[0].delete("\n");
+		ip = d[0].split("\n")[0];
+		#pega a porta do arquivo
+		porta = d[1].split("\n")[0].to_i;
 
 		#pega o dado do arquivo
 		dado = ""
@@ -98,7 +100,7 @@ class Cliente
 		end
 
 		puts "Ip do destinatario: #{ip}"
-		puts "Dados: #{dado}"
+		puts "Dados: \n\n#{dado}\n\n"
 
 		#PEGA O MAC do destino
 		macDestino = get_mac_address(ip)
@@ -126,23 +128,23 @@ class Cliente
     #usado para sincronizar o emissor ao clock do remetente
 		preambulo = "1010101010101010101010101010101010101010101010101010101010101011"
     #tipo indica o protocolo da camada superior , junto com o mac do destino e da origem formam o cabeçalho
-		tipo=  34667.to_s(2)
+		type=  34667.to_s(2)
+		puts "Type = #{type}"
     #utilizado para deteccao de erros
 		checksum = "00000000000000000000000000000000"
 
 		puts "Ta aqui o frame ethernet"
 		puts "#{preambulo}#{macDestinoBinario}#{macOrigemBinario}#{type}#{checksum}"
 
-    host = ip
-    port = 5000
-
 		#tenta conectar ate conseguir
 		puts "Esperando servidor ficar disponivel"
+		puts "#{ip}"
+		puts "#{porta}"
     aux=0
 		while aux!=1
       begin
 			aux=1
-			sock = TCPSocket.open(host, port)
+			sock = TCPSocket.open(ip, porta)
 			rescue
 				aux=0
         sleep 1
