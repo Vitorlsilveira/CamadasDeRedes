@@ -139,16 +139,33 @@ class Cliente
 
 		puts "Conectado ao servidor: #{ip}"
 
-		#pergunta ao servidor qual sera o tamanho do quadro
+		#Pergunta ao servidor qual sera o tamanho do quadro
 		sock.puts("E ai manel, qual eh o tamanho do quadro?\000", 0)
-    #
 		tamanhoQuadroBytes = sock.gets
 
-		puts "Manelzinho o tamanho do quadro em bytes eh: #{tamanhoQuadroBytes}"
-		#quantos = dados.size / tamanhoQuadroBytes
-		#quantosInteiros = quanto.ceil
-		puts "O tamanho do arquivo eh: #{dados.size} bytes"
+		#Agora que ja sabemos o tamanho basta enviar as partes
+		enviarPorPartes(sock, dados, tamanhoQuadroBytes.to_i)
 
+	end
+
+	def enviarPorPartes(sock, dados, tamanho)
+		#Nesse bloco eh enviado o arquivo em pedacos para o servidor
+		if tamanho > dados.size #Caso o tamanho exceder o tamanho do arquivo ai definimos um envio inteiro do mesmo
+			tamanho = dados.size
+		end
+		quantos = (dados.size / tamanho).ceil
+		inicio = 0
+		fim = tamanho
+		i = 0
+		while i < quantos
+			sock.write dados[inicio..fim]
+			inicio = fim+1
+			fim += tamanho
+			i += 1
+		end
+
+		puts "\n\nManelzinho o tamanho do quadro em bytes eh: #{tamanho}"
+		puts "O tamanho do arquivo eh: #{dados.size} bytes \nForam enviados: #{quantos} quadros\n\n"
 
 	end
 end
@@ -156,6 +173,5 @@ end
 
 c=Cliente.new ("wlan0")
 puts c.converteHexToBin ("3C124542124242")
-puts c.divideString("testandooo","2")
 puts c.getMyMacAddress
 c.executar("teste.txt")

@@ -1,0 +1,5 @@
+127.0.0.1
+20023
+ip_dest:127.0.0.1;ip_orig:192.168.0.34;
+porta_orig:20023;porta_dest:20023
+GET 127.0.0.1/index.html
