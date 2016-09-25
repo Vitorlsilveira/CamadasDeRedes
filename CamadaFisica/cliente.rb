@@ -153,7 +153,7 @@ class Cliente
 		if tamanho > dados.size #Caso o tamanho exceder o tamanho do arquivo ai definimos um envio inteiro do mesmo
 			tamanho = dados.size
 		end
-		quantos = (dados.size / tamanho).ceil
+		quantos = (dados.size.to_f / tamanho).ceil
 		inicio = 0
 		fim = tamanho
 		i = 0
