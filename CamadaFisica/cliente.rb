@@ -72,35 +72,23 @@ class Cliente
 
 	def executar(arquivo)
 		puts "Esperando pacote da camada de Rede"
-		aux=0
-		while aux!=1
-			aux=1
-			caminho="#{arquivo}"
-			begin
-			d = File.readlines(caminho)
-			rescue
-				aux=0
-			end
-		end
 
-		while d.size == 0 do
-			caminho="#{arquivo}"
-			d = File.readlines(caminho)
+		#Lendo dados do arquivo
+		dados = ""
+		File.open("#{arquivo}", "r") do |f|
+		  f.each_line do |line|
+		    dados = dados + line
+		  end
 		end
 
 		#pega o IP do arquivo
-		ip = d[0].split("\n")[0];
+		ip = dados.split("\n")[0];
 		#pega a porta do arquivo
-		porta = d[1].split("\n")[0].to_i;
-
-		#pega o dado do arquivo
-		dado = ""
-		for i in 0..d.size
-			dado += d[i].to_s
-		end
+		porta = dados.split("\n")[1].to_i;
 
 		puts "Ip do destinatario: #{ip}"
-		puts "Dados: \n\n#{dado}\n\n"
+		puts "Porta: #{porta}"
+		puts "Dados: \n\n#{dados}\n\n"
 
 		#PEGA O MAC do destino
 		macDestino = get_mac_address(ip)
@@ -121,8 +109,6 @@ class Cliente
 		puts "Mac do destinatario em binario: #{macDestinoBinario}"
 		puts "Mac do remetente em binario: #{macOrigemBinario}"
 
-    #Transforma dado/tipo em binario
-		dadoBinario = dado.unpack('B*')
 
 		#dados que compoem quadro ethernet
     #usado para sincronizar o emissor ao clock do remetente
@@ -154,12 +140,14 @@ class Cliente
 		puts "Conectado ao servidor: #{ip}"
 
 		#pergunta ao servidor qual sera o tamanho do quadro
-		sock.puts("E ai manel, qual e' o tamanho do quadro?")
+		sock.puts("E ai manel, qual eh o tamanho do quadro?\000", 0)
     #
 		tamanhoQuadroBytes = sock.gets
-		tmq = tamanhoQuadroBytes * 8
 
-		puts "Manelzinho o tamanho do quadro em bytes e':#{tamanhoQuadroBytes}"
+		puts "Manelzinho o tamanho do quadro em bytes eh: #{tamanhoQuadroBytes}"
+		#quantos = dados.size / tamanhoQuadroBytes
+		#quantosInteiros = quanto.ceil
+		puts "O tamanho do arquivo eh: #{dados.size} bytes"
 
 
 	end

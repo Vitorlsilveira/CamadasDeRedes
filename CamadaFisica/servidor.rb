@@ -5,16 +5,23 @@ class Servidor
   def initialize(port)
     @port=port
 		@server=TCPServer.open(port)
+    @division=1
 	end
 
   def executar
     puts "Listening to port #{@port}"
     loop {
-      puts "Waiting..."
       Thread.start(@server.accept) do |client|
-        data = client.read
+        puts "Conectado"
+        data = client.gets
         puts data
-        client.puts 10
+
+        #Aqui eh definido a divisao q sera feita na hora de enviar os quadros
+        @division = gets
+        client.puts @division
+
+
+
       end
     }
   end
