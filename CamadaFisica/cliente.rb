@@ -1,4 +1,5 @@
 require "readline"
+require 'digest/crc32'
 require 'socket'
 
 class Cliente
