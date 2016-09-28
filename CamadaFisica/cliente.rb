@@ -8,11 +8,14 @@ class Cliente
 	end
 
 	def get_mac_address(ip)
-	begin
+		begin
 			response = `sh mac.sh #{ip} #{@interface}`
 			mac = response.split()[3]
+			if mac == "entries" then
+				raise "Mac nao encontrado"
+			end
 		rescue
-				mac = "00:00:00:00:00:00"
+				mac = getMyMacAddress
 		end
 	return mac
 	end
@@ -75,24 +78,36 @@ class Cliente
 		puts "Esperando pacote da camada de Rede"
 
 		#Lendo dados do arquivo
-		dados = ""
-		File.open("#{arquivo}", "r") do |f|
-		  f.each_line do |line|
-		    dados = dados + line
-		  end
-		end
+		dados = []
+		pacote = File.open("#{arquivo}", "r").read
+		dados << pacote
+		dados = dados.pack("b*")
+		puts dados
 
+		origem = dados.split(";")[0]
+		destino = dados.split(";")[1]
+		msg = dados.split(";")[2]
+
+		#origem
 		#pega o IP do arquivo
-		ip = dados.split("\n")[0];
+		origemIP = origem.split(":")[0]
 		#pega a porta do arquivo
-		porta = dados.split("\n")[1].to_i;
+		origemPorta = origem.split(":")[1].to_i
 
-		puts "Ip do destinatario: #{ip}"
-		puts "Porta: #{porta}"
-		puts "Dados: \n\n#{dados}\n\n"
+		#destino
+		#pega o IP do arquivo
+		destinoIP = destino.split(":")[0]
+		#pega a porta do arquivo
+		destinoPorta = destino.split(":")[1].to_i
+
+		#porta = dados.split(";")[1].to_i;
+
+		puts "Ip do destinatario: #{destinoIP}"
+		puts "Porta: #{destinoPorta}"
+		puts "Dados: \n\n#{msg}\n\n"
 
 		#PEGA O MAC do destino
-		macDestino = get_mac_address(ip)
+		macDestino = get_mac_address(destinoIP)
 		#PEGA O MAC do remetente de acordo com a interface usada
 		macOrigem = getMyMacAddress
 
@@ -116,36 +131,47 @@ class Cliente
 		preambulo = "1010101010101010101010101010101010101010101010101010101010101011"
     #tipo indica o protocolo da camada superior , junto com o mac do destino e da origem formam o cabeçalho
 		type=  34667.to_s(2)
-		puts "Type = #{type}"
+		#puts "Type = #{type}"
     #utilizado para deteccao de erros
-		checksum = "00000000000000000000000000000000"
+		crc = converteHexToBin(Digest::CRC32.hexdigest("#{arquivo}"))
+		#puts "CRC = #{crc}"
+		#checksum = "00000000000000000000000000000000"
 
 		puts "Ta aqui o frame ethernet"
-		puts "#{preambulo}#{macDestinoBinario}#{macOrigemBinario}#{type}#{checksum}"
+		puts "#{preambulo}#{macDestinoBinario}#{macOrigemBinario}#{type}#{pacote}#{crc}"
+		puts "Tamanho do preambulo : #{preambulo.size.to_f/8}"
+		puts "Tamanho do macDestinoBinario : #{macDestinoBinario.size.to_f/8}"
+		puts "Tamanho do macOrigemBinario : #{macOrigemBinario.size.to_f/8}"
+		puts "Tamanho do type : #{type.size.to_f/8}"
+		puts "Tamanho do pacote : #{pacote.size.to_f/8}"
+		puts "Tamanho do crc : #{crc.size.to_f/8}"
+
+		quadro = preambulo+macDestinoBinario+macOrigemBinario+type+pacote+crc
+		puts "\nTamanho do quadro : #{quadro.size.to_f/8}"
 
 		#tenta conectar ate conseguir
 		puts "Esperando servidor ficar disponivel"
-		puts "#{ip}"
-		puts "#{porta}"
     aux=0
 		while aux!=1
       begin
 			aux=1
-			sock = TCPSocket.open(ip, porta)
+			sock = TCPSocket.open(destinoIP, destinoPorta)
 			rescue
 				aux=0
         sleep 1
 			end
 		end
 
-		puts "Conectado ao servidor: #{ip}"
+		puts "Conectado ao servidor: #{destinoIP}"
 
 		#Pergunta ao servidor qual sera o tamanho do quadro
 		sock.puts("E ai manel, qual eh o tamanho do quadro?\000", 0)
 		tamanhoQuadroBytes = sock.gets
 
+
+
 		#Agora que ja sabemos o tamanho basta enviar as partes
-		enviarPorPartes(sock, dados, tamanhoQuadroBytes.to_i)
+		enviarPorPartes(sock, quadro, tamanhoQuadroBytes.to_i)
 
 	end
 
@@ -166,13 +192,13 @@ class Cliente
 		end
 
 		puts "\n\nManelzinho o tamanho do quadro em bytes eh: #{tamanho}"
-		puts "O tamanho do arquivo eh: #{dados.size} bytes \nForam enviados: #{quantos} quadros\n\n"
+		puts "O tamanho do arquivo eh: #{dados.size.to_f/8} bytes \nForam enviados: #{quantos} quadros\n\n"
 
 	end
 end
 
 
 c=Cliente.new ("wlan0")
-puts c.converteHexToBin ("3C124542124242")
-puts c.getMyMacAddress
-c.executar("teste.txt")
+#puts c.converteHexToBin ("3C124542124242")
+#puts c.getMyMacAddress
+c.executar("../pacote.txt")

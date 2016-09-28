@@ -28,6 +28,9 @@ class Servidor
         puts "\n\n"
         puts dados
         puts "\n\n"
+        puts "Convertido: "
+        puts [dados].pack("b*")
+        puts "\n\n"
 
         File.write("teste_recebido.txt", dados)
 
