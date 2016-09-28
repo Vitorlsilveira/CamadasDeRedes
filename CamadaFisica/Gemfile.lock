@@ -1,0 +1,10 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    digest-crc (0.4.1)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  digest-crc
