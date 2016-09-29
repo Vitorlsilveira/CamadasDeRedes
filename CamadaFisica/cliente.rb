@@ -39,12 +39,8 @@ class Cliente
 		return saida
 	end
 
-	def divideString(string, length)
-	    return string.scan(/.{1,#{length}}/)
-	end
-
 	def executar(arquivo)
-		puts "Esperando pacote da camada de Rede"
+		puts "Aguardando PDU da camada superior"
 
 		#Lendo dados do arquivo
 		dados = []
@@ -75,35 +71,33 @@ class Cliente
 		puts "Porta: #{destinoPorta}"
 		puts "Dados: \n\n#{msg}\n\n"
 
-		#PEGA O MAC do destino
+		#pega o mac do destino
 		macDestino = get_mac_address(destinoIP)
-		#PEGA O MAC do remetente de acordo com a interface usada
+		#pega o mac do remetente de acordo com a interface usada
 		macOrigem = getMyMacAddress
 
 		puts "Mac do destinatario: #{macDestino}"
 		puts "Mac do remetente: #{macOrigem}"
 
-    #Formata os MAC address retirando o dois pontos
+   	#Formata os MAC address retirando o dois pontos
 		macDestino = macDestino.gsub(":","").delete("\n")
 		macOrigem = macOrigem.gsub(":","").delete("\n")
 
-		#TRANSFORMA OS MAC ADDRESS PARA BINARIO
+		#transforma os mac para binario
 		macDestinoBinario=converteHexToBin(macDestino)
 		macOrigemBinario=converteHexToBin(macOrigem)
 
 		puts "Mac do destinatario em binario: #{macDestinoBinario}"
 		puts "Mac do remetente em binario: #{macOrigemBinario}"
 
-		#dados que compoem quadro ethernet
-    #usado para sincronizar o emissor ao clock do remetente
+   	#usado para sincronizar o emissor ao clock do remetente
 		preambulo = "1010101010101010101010101010101010101010101010101010101010101011"
-    #tipo indica o protocolo da camada superior, junto com o mac do destino e da origem formam o cabeçalho
-		#esse tipo deve ser entao convertido para binario
-		type=  2048.to_s(2)
+   	#tipo indica o protocolo da camada superior e deve ser formatado para binario
+		type=  converteHexToBin("0800")
     #utilizado para deteccao de erros
 		crc = converteHexToBin(Digest::CRC32.hexdigest("#{arquivo}"))
 
-		puts "Ta aqui o frame ethernet"
+		puts "Frame ethernet:\n"
 		puts "#{preambulo}#{macDestinoBinario}#{macOrigemBinario}#{type}#{pacote}#{crc}"
 		puts "Tamanho do preambulo : #{preambulo.size.to_f/8}"
 		puts "Tamanho do macDestinoBinario : #{macDestinoBinario.size.to_f/8}"
@@ -112,33 +106,31 @@ class Cliente
 		puts "Tamanho do pacote : #{pacote.size.to_f/8}"
 		puts "Tamanho do crc : #{crc.size.to_f/8}"
 
+		#pdu da camada fisica
 		quadro = preambulo+macDestinoBinario+macOrigemBinario+type+pacote+crc
 		puts "\nTamanho do quadro : #{quadro.size.to_f/8}"
 
 		#tenta conectar ate conseguir
-		puts "Esperando servidor ficar disponivel"
-    aux=0
-		while aux!=1
+		puts "Aguardando servidor ficar disponivel!"
+
+		sock = 0
+		while sock==0
       begin
-			aux=1
 			sock = TCPSocket.open(destinoIP, destinoPorta)
 			rescue
-				aux=0
+				sock=0
         sleep 1
 			end
 		end
 
 		puts "Conectado ao servidor: #{destinoIP}"
 
-		#Pergunta ao servidor qual sera o tamanho do quadro
-		sock.puts("E ai manel, qual eh o tamanho do quadro?\000", 0)
-		sock.flush
+		#Pergunta ao servidor qual sera o tamanho maximo do quadro
+		sock.puts("Qual o tamanho maximo do quadro(TMQ) ?\000", 0)
 		tamanhoQuadroBytes = sock.gets
-
 
 		#Agora vamos enviar o quadro
 		sock.write quadro;
-
 	end
 
 end

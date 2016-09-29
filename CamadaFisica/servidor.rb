@@ -12,6 +12,7 @@ class Servidor
 		saida=""
     j = 0
     while j < x.size-1
+      #Aqui pegamos 4 bits e os convertemos para hex
       saida+=x[j..j+3].to_i(2).to_s(16)
       j+=4
     end
@@ -26,7 +27,7 @@ class Servidor
         data = client.gets
         puts data
 
-        #Aqui eh definido a divisao q sera feita na hora de enviar os quadros
+        #Aqui definimos o TMQ
         @TMQ = gets
         client.puts @TMQ
 
@@ -46,7 +47,7 @@ class Servidor
     		puts "Mac Destino : #{macDestino}"
     		puts "Mac Origem : #{macOrigem}"
     		puts "Type : #{type}"
-    		puts "Pacote : #{data}"
+    		puts "Pacote : #{[data].pack("b*")}"
     		puts "Crc : #{crc}"
         puts "\n\n"
 
