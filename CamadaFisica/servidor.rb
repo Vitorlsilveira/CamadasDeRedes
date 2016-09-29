@@ -5,7 +5,7 @@ class Servidor
   def initialize(port)
     @port=port
 		@server=TCPServer.open(port)
-    @division=1
+    @TMQ=1
 	end
 
   def converteBinToHex(x)
@@ -27,8 +27,8 @@ class Servidor
         puts data
 
         #Aqui eh definido a divisao q sera feita na hora de enviar os quadros
-        @division = gets
-        client.puts @division
+        @TMQ = gets
+        client.puts @TMQ
 
         client.gets
         dados = client.gets

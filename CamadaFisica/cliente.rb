@@ -11,13 +11,13 @@ class Cliente
 		begin
 			response = `sh mac.sh #{ip} #{@interface}`
 			mac = response.split()[3]
-			if mac == "entries" then
-				raise "Mac nao encontrado"
+			if mac.size < 17
+				raise "MAC nao encontrado"
 			end
 		rescue
-				mac = getMyMacAddress
+			mac = "00:00:00:00:00:00"
 		end
-	return mac
+		return mac
 	end
 
 	def getMyMacAddress
@@ -97,8 +97,9 @@ class Cliente
 		#dados que compoem quadro ethernet
     #usado para sincronizar o emissor ao clock do remetente
 		preambulo = "1010101010101010101010101010101010101010101010101010101010101011"
-    #tipo indica o protocolo da camada superior , junto com o mac do destino e da origem formam o cabeçalho
-		type=  34667.to_s(2)
+    #tipo indica o protocolo da camada superior, junto com o mac do destino e da origem formam o cabeçalho
+		#esse tipo deve ser entao convertido para binario
+		type=  2048.to_s(2)
     #utilizado para deteccao de erros
 		crc = converteHexToBin(Digest::CRC32.hexdigest("#{arquivo}"))
 
@@ -131,6 +132,7 @@ class Cliente
 
 		#Pergunta ao servidor qual sera o tamanho do quadro
 		sock.puts("E ai manel, qual eh o tamanho do quadro?\000", 0)
+		sock.flush
 		tamanhoQuadroBytes = sock.gets
 
 
@@ -142,7 +144,5 @@ class Cliente
 end
 
 
-c=Cliente.new ("wlan0")
-#puts c.converteHexToBin ("3C124542124242")
-#puts c.getMyMacAddress
+c=Cliente.new ("eth0")
 c.executar("../pacote.txt")
