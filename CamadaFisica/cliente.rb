@@ -32,41 +32,10 @@ class Cliente
 
 	def converteHexToBin(x)
 		saida=""
-		for i in 0..x.size
-			if x[i].to_s.upcase == "0"
-				saida+="0000"
-			elsif x[i].to_s.upcase == "1"
-				saida+="0001"
-			elsif x[i].to_s.upcase == "2"
-				saida+="0010"
-			elsif x[i].to_s.upcase == "3"
-				saida+="0011"
-			elsif x[i].to_s.upcase == "4"
-				saida+="0100"
-			elsif x[i].to_s.upcase == "5"
-				saida+="0101"
-			elsif x[i].to_s.upcase == "6"
-				saida+="0110"
-			elsif x[i].to_s.upcase == "7"
-				saida+="0111"
-			elsif x[i].to_s.upcase == "8"
-				saida+="1000"
-			elsif x[i].to_s.upcase == "9"
-				saida+="1001"
-			elsif x[i].to_s.upcase == "A"
-				saida+="1010"
-			elsif x[i].to_s.upcase == "B"
-				saida+="1011"
-			elsif x[i].to_s.upcase == "C"
-				saida+="1100"
-			elsif x[i].to_s.upcase == "D"
-				saida+="1101"
-			elsif x[i].to_s.upcase == "E"
-				saida+="1110"
-			elsif x[i].to_s.upcase == "F"
-				saida+="1111"
-			end
+		for i in 0..(x.size-1)
+			saida+=x[i].hex.to_s(2).rjust(x[i].size*4, '0')
 		end
+		puts saida
 		return saida
 	end
 
@@ -115,8 +84,8 @@ class Cliente
 		puts "Mac do remetente: #{macOrigem}"
 
     #Formata os MAC address retirando o dois pontos
-		macDestino = macDestino.gsub(":","")
-		macOrigem = macOrigem.gsub(":","")
+		macDestino = macDestino.gsub(":","").delete("\n")
+		macOrigem = macOrigem.gsub(":","").delete("\n")
 
 		#TRANSFORMA OS MAC ADDRESS PARA BINARIO
 		macDestinoBinario=converteHexToBin(macDestino)
@@ -125,17 +94,13 @@ class Cliente
 		puts "Mac do destinatario em binario: #{macDestinoBinario}"
 		puts "Mac do remetente em binario: #{macOrigemBinario}"
 
-
 		#dados que compoem quadro ethernet
     #usado para sincronizar o emissor ao clock do remetente
 		preambulo = "1010101010101010101010101010101010101010101010101010101010101011"
     #tipo indica o protocolo da camada superior , junto com o mac do destino e da origem formam o cabeçalho
 		type=  34667.to_s(2)
-		#puts "Type = #{type}"
     #utilizado para deteccao de erros
 		crc = converteHexToBin(Digest::CRC32.hexdigest("#{arquivo}"))
-		#puts "CRC = #{crc}"
-		#checksum = "00000000000000000000000000000000"
 
 		puts "Ta aqui o frame ethernet"
 		puts "#{preambulo}#{macDestinoBinario}#{macOrigemBinario}#{type}#{pacote}#{crc}"
@@ -168,11 +133,8 @@ class Cliente
 		sock.puts("E ai manel, qual eh o tamanho do quadro?\000", 0)
 		tamanhoQuadroBytes = sock.gets
 
-
-
 		#Agora que ja sabemos o tamanho basta enviar as partes
 		enviarPorPartes(sock, quadro, tamanhoQuadroBytes.to_i)
-
 	end
 
 	def enviarPorPartes(sock, dados, tamanho)
