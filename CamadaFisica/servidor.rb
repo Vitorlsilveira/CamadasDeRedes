@@ -30,16 +30,9 @@ class Servidor
         @division = gets
         client.puts @division
 
-        dados = ""
-        client.gets #Esse gets eh uma correcao de bug... nao sei pq mas a primeira parte sempre vem um 0
-        while line = client.gets
-          dados += line
-        end
-        puts "\n\n"
-        puts dados
-        puts "\n\n"
-        puts "Convertido: "
-        puts [dados].pack("b*")
+        client.gets
+        dados = client.gets
+
         puts "\n\n"
 
         preambulo = dados[0..63]

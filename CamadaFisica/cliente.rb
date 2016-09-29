@@ -133,30 +133,12 @@ class Cliente
 		sock.puts("E ai manel, qual eh o tamanho do quadro?\000", 0)
 		tamanhoQuadroBytes = sock.gets
 
-		#Agora que ja sabemos o tamanho basta enviar as partes
-		enviarPorPartes(sock, quadro, tamanhoQuadroBytes.to_i)
-	end
 
-	def enviarPorPartes(sock, dados, tamanho)
-		#Nesse bloco eh enviado o arquivo em pedacos para o servidor
-		if tamanho > dados.size #Caso o tamanho exceder o tamanho do arquivo ai definimos um envio inteiro do mesmo
-			tamanho = dados.size
-		end
-		quantos = (dados.size.to_f / tamanho).ceil
-		inicio = 0
-		fim = tamanho
-		i = 0
-		while i < quantos
-			sock.write dados[inicio..fim]
-			inicio = fim+1
-			fim += tamanho
-			i += 1
-		end
-
-		puts "\n\nManelzinho o tamanho do quadro em bytes eh: #{tamanho}"
-		puts "O tamanho do arquivo eh: #{dados.size.to_f/8} bytes \nForam enviados: #{quantos} quadros\n\n"
+		#Agora vamos enviar o quadro
+		sock.write quadro;
 
 	end
+
 end
 
 
