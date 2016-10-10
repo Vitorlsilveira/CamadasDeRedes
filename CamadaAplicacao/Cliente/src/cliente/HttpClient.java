@@ -1,6 +1,7 @@
 package cliente;
 
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -28,16 +29,18 @@ public class HttpClient {
 
 	private String host;
 	private int port;
+        private String myip;
 
 	/**
 	 * Construtor do cliente HTTP
 	 * @param host host para o cliente acessar
 	 * @param port porta de acesso
 	 */
-	public HttpClient(String host, int port) {
+	public HttpClient(String host, int port, String myip) {
 		super();
 		this.host = host;
 		this.port = port;
+                this.myip = myip;
 	}
 
 	/**
@@ -52,16 +55,22 @@ public class HttpClient {
 		Socket socket = null;
 		try {
 			// Abre a conexão
-			socket = new Socket(this.host, this.port);
-			PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-			BufferedReader in = new BufferedReader(new InputStreamReader(
-					socket.getInputStream()));
+                        Socket clientSocket = new Socket("localhost", 7777);
+                        DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
+
+                        String req = "";
 
 			// Envia a requisição
-			out.println("GET " + path + " " + HTTP_VERSION);
-			out.println("Host: " + this.host);
-			out.println("Connection: Close");
-			out.println();
+                        req += this.myip + ":" + "7777" + ";" + this.host + ":" + "6969" + ";";
+			req += "GET " + path + " " + HTTP_VERSION + "\n";
+			req += "Host: " + this.host + "\n";
+			req += "Connection: Close;";
+                        
+			req = toBinary(req, 8);
+                        
+                        System.out.println(req);
+                        outToServer.writeBytes(req + "\n");
+                        //out.println(req);
                         
                         System.out.println("GET " + path + " " + HTTP_VERSION);
 			System.out.println("Host: " + this.host);
@@ -72,15 +81,15 @@ public class HttpClient {
 			StringBuffer sb = new StringBuffer();
 
 			// recupera a resposta quando ela estiver disponível
-			while (loop) {
-				if (in.ready()) {
-					int i = 0;
-					while ((i = in.read()) != -1) {
-						sb.append((char) i);
-					}
-					loop = false;
-				}
-			}
+//			while (loop) {
+//				if (in.ready()) {
+//					int i = 0;
+//					while ((i = in.read()) != -1) {
+//						sb.append((char) i);
+//					}
+//					loop = false;
+//				}
+//			}
 			return sb.toString();
 		} finally {
 			if (socket != null) {
@@ -89,8 +98,39 @@ public class HttpClient {
 		}
 	}
 
+        public static String toBinary(String str, int bits) {
+            String result = "";
+            String tmpStr;
+            int tmpInt;
+            char[] messChar = str.toCharArray();
+
+            for (int i = 0; i < messChar.length; i++) {
+                // Converte individualmente cada char para binario
+                tmpStr = Integer.toBinaryString(messChar[i]);
+                tmpInt = tmpStr.length();
+                // Caso o tamanho for menor que 8 entao completamos o que falta com zeros a esquerda
+                if(tmpInt != bits) {
+                    tmpInt = bits - tmpInt;
+                    if (tmpInt == bits) {
+                        result += tmpStr;
+                    } else if (tmpInt > 0) {
+                        for (int j = 0; j < tmpInt; j++) {
+                            result += "0";
+                        }
+                        result += tmpStr;
+                    } else {
+                        System.err.println("argument 'bits' is too small");
+                    }
+                } else {
+                    result += tmpStr;
+                }
+            }
+
+            return result;
+        }
+
 	public static void main(String[] args) {
-		HttpClient client = new HttpClient("localhost", 6768);
+		HttpClient client = new HttpClient("localhost", 6768, "192.168.0.34");
 		try {
 			System.out.println(client.getURIRawContent("/hello.html"));
 		} catch (UnknownHostException e) {

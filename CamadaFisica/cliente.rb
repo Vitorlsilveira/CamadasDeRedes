@@ -2,9 +2,12 @@ require "readline"
 require 'digest/crc32'
 require 'socket'
 
+
 class Cliente
 	def initialize(interface)
 		@interface=interface
+		@server=TCPServer.open(7777)
+		@port=7777
 	end
 
 	def get_mac_address(ip)
@@ -39,14 +42,23 @@ class Cliente
 		return saida
 	end
 
+	def recebePDU()
+		puts "Listening to port #{@port}"
+		client = @server.accept    # Wait for a client to connect
+	  data = client.gets
+		puts data
+	  client.close
+		return data
+	end
+
 	def executar(arquivo)
 		puts "Aguardando PDU da camada superior"
 
-		#Lendo dados do arquivo
+		#Lendo dados da camada de cima
 		dados = []
-		pacote = File.open("#{arquivo}", "r").read
+		pacote = recebePDU()
 		dados << pacote
-		dados = dados.pack("b*")
+		dados = dados.pack("B*")
 		puts dados
 
 		origem = dados.split(";")[0]
@@ -136,5 +148,5 @@ class Cliente
 end
 
 
-c=Cliente.new ("eth0")
+c=Cliente.new ("wlan0")
 c.executar("../pacote.txt")

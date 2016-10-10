@@ -47,7 +47,7 @@ class Servidor
     		puts "Mac Destino : #{macDestino}"
     		puts "Mac Origem : #{macOrigem}"
     		puts "Type : #{type}"
-    		puts "Pacote : #{[data].pack("b*")}"
+    		puts "Pacote : #{[data].pack("B*")}"
     		puts "Crc : #{crc}"
         puts "\n\n"
 
@@ -57,5 +57,5 @@ class Servidor
     }
   end
 end
-servidor = Servidor.new(20023)
+servidor = Servidor.new(6969)
 servidor.executar
