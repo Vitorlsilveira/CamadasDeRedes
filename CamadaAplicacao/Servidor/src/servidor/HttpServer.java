@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 
 import classes.request.Request;
 import classes.response.Response;
-import classes.response.ResponseFactory;
+import java.util.Scanner;
 
 /**
  * Servidor HTTP simples
@@ -86,7 +86,7 @@ public class HttpServer {
 				request.parse(requestString);
 
 				// recupera a resposta de acordo com a requisicao
-				Response response = ResponseFactory.createResponse(request);
+				Response response = new Response(request);
 				String responseString = response.respond();
 				logger.info("Resposta enviada. Conteúdo:\n" + responseString);
 				output.write(responseString.getBytes());
@@ -122,7 +122,10 @@ public class HttpServer {
 	}
 
 	public static void main(String[] args) {
-		HttpServer server = new HttpServer("localhost", 6768);
+                Scanner reader = new Scanner(System.in);  
+                System.out.println("Qual o endereco?");
+                String ip = reader.nextLine();
+		HttpServer server = new HttpServer(ip, 6768);
 		server.serve();
 	}
 
