@@ -48,7 +48,7 @@ class Cliente
 	  data = client.gets
 		puts data
 	  client.close
-		return data
+		return data.chomp
 	end
 
 	def executar(arquivo)
