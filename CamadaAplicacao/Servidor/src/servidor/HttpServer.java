@@ -1,4 +1,4 @@
-package camadaaplicacao;
+package servidor;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -42,7 +42,7 @@ public class HttpServer {
 	 *            porta do servidor
 	 */
 	public HttpServer(String host, int port) {
-		super();
+		//super();
 		this.host = host;
 		this.port = port;
 	}
@@ -121,9 +121,9 @@ public class HttpServer {
 		}
 	}
 
-//	public static void main(String[] args) {
-//		HttpServer server = new HttpServer("localhost", 6768);
-//		server.serve();
-//	}
+	public static void main(String[] args) {
+		HttpServer server = new HttpServer("localhost", 6768);
+		server.serve();
+	}
 
 }

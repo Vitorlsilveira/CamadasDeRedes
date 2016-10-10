@@ -1,4 +1,4 @@
-package camadaaplicacao;
+package cliente;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -62,6 +62,10 @@ public class HttpClient {
 			out.println("Host: " + this.host);
 			out.println("Connection: Close");
 			out.println();
+                        System.out.println("GET " + path + " " + HTTP_VERSION);
+			System.out.println("Host: " + this.host);
+			System.out.println("Connection: Close");
+			System.out.println();
 
 			boolean loop = true;
 			StringBuffer sb = new StringBuffer();
@@ -85,7 +89,7 @@ public class HttpClient {
 	}
 
 	public static void main(String[] args) {
-		HttpClient client = new HttpClient("www.thiagovespa.com.br", 80);
+		HttpClient client = new HttpClient("localhost", 6768);
 		try {
 			System.out.println(client.getURIRawContent("/blog/"));
 		} catch (UnknownHostException e) {

@@ -5,8 +5,8 @@ import classes.request.Request;
 /**
  * Fábrica de respostas
  * 
- * @author Thiago Galbiatti Vespa - <a
- *         href="mailto:thiago@thiagovespa.com.br">thiago@thiagovespa.com.br</a>
+ * @author Thiago Galbiatti Vespa - 
+ * <a  href="mailto:thiago@thiagovespa.com.br">thiago@thiagovespa.com.br</a>
  * @version 0.1
  */
 public class ResponseFactory {
