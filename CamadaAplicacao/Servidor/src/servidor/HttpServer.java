@@ -3,6 +3,9 @@ package servidor;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
@@ -76,20 +79,25 @@ public class HttpServer {
 			OutputStream output = null;
 			try {
 				socket = serverSocket.accept();
+                                System.out.println("Aceitou conexão com o cliente do servidor da camada fisica");
 				input = socket.getInputStream();
 				output = socket.getOutputStream();
 
 				// Realiza o parse da requisição recebida
 				String requestString = convertStreamToString(input);
-				logger.info("Conexão recebida. Conteúdo:\n" + requestString);
+                                String saida=binaryToString(requestString);
+				logger.info("Conexão recebida. Conteúdo em binário:\n" + requestString);
+                                logger.info("Conexão recebida. Conteúdo em texto:\n" + saida);
+                                escritor("src/servidor/respostaDaFisicaEmBinarioSA.txt",requestString);
+                                escritor("src/servidor/respostaDaFisicaEmTextoSA.txt",saida);                                
 				Request request = new Request();
-				request.parse(requestString);
-
+				request.parse(saida);
+                                
 				// recupera a resposta de acordo com a requisicao
 				Response response = new Response(request);
 				String responseString = response.respond();
 				logger.info("Resposta enviada. Conteúdo:\n" + responseString);
-				output.write(responseString.getBytes());
+                                escritor("src/servidor/respostaDaRequisicaoSA.txt",responseString);
 
 				// Fecha a conexão
 				socket.close();
@@ -101,6 +109,12 @@ public class HttpServer {
 		}
 	}
 
+        private static void escritor(String path,String dados) throws IOException {
+            BufferedWriter buffWrite = new BufferedWriter(new FileWriter(path));
+            buffWrite.append(dados + "\n");
+            buffWrite.close();
+        }
+            
 	private String convertStreamToString(InputStream is) {
 
 		if (is != null) {
@@ -120,6 +134,16 @@ public class HttpServer {
 			return "";
 		}
 	}
+
+        public static String binaryToString(String str) {
+            int resultLength = str.length() / 8;
+            char[] result = new char[resultLength];
+            for (int i = 0; i < resultLength; i++) {
+                 String sub = str.substring(i * 8, (i + 1) * 8);
+                 result[i] = (char) Integer.parseInt(sub, 2);
+            }
+            return (new String(result));
+        }        
 
 	public static void main(String[] args) {
                 Scanner reader = new Scanner(System.in);  

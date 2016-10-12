@@ -1,7 +1,9 @@
 package cliente;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.DataOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -66,8 +68,10 @@ public class HttpClient {
 			req += "Host: " + this.host + "\n";
 			req += "Connection: Close;";
                         System.out.println("Antes de converter para binario: ");
-                        System.out.println(req);                        
+                        System.out.println(req);
+                        escritor("src/cliente/requisicaoEmTextoCA.txt",req);
 			req = toBinary(req, 8);
+                        escritor("src/cliente/requisicaoEmBinarioCA.txt",req);                        
                         System.out.println("Apos converter para binario: ");                        
                         System.out.println(req);
                         System.out.println("Apos converter para string: ");
@@ -141,6 +145,12 @@ public class HttpClient {
                  result[i] = (char) Integer.parseInt(sub, 2);
             }
             return (new String(result));
+        }
+       
+        private static void escritor(String path,String dados) throws IOException {
+            BufferedWriter buffWrite = new BufferedWriter(new FileWriter(path));
+            buffWrite.append(dados + "\n");
+            buffWrite.close();
         }
         
 	public static void main(String[] args) {

@@ -43,8 +43,9 @@ class Cliente
 	end
 
 	def recebePDU()
-		puts "Listening to port #{@port}"
-		client = @server.accept    # Wait for a client to connect
+		puts "Ouvindo do cliente da aplicação na porta #{@port}"
+		# espera pela conexão do cliente da camada de aplicação
+		client = @server.accept
 	  data = client.gets
 		puts data
 	  client.close

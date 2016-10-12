@@ -19,6 +19,22 @@ class Servidor
 		return saida
 	end
 
+  def enviaPDU(ip,porta,dados)
+    #tenta conectar ate conseguir
+		puts "To esperando servidor da aplicação ficar disponivel!"
+		sock1 = 0
+		while sock1==0
+      begin
+			sock1 = TCPSocket.open(ip,porta)
+			rescue
+				sock1=0
+        sleep 1
+			end
+		end
+    sock1.write dados;
+    puts "Enviei para o servidor da aplicação!"
+	end
+
   def executar
     puts "Listening to port #{@port}"
     loop {
@@ -52,7 +68,7 @@ class Servidor
         puts "\n\n"
 
         File.write("../pacote_recebido.txt", data)
-
+        enviaPDU("127.0.0.1",6768,data)
       end
     }
   end
