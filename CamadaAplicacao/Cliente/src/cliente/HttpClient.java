@@ -65,10 +65,14 @@ public class HttpClient {
 			req += "GET " + path + " " + HTTP_VERSION + "\n";
 			req += "Host: " + this.host + "\n";
 			req += "Connection: Close;";
-                        
+                        System.out.println("Antes de converter para binario: ");
+                        System.out.println(req);                        
 			req = toBinary(req, 8);
-                        
+                        System.out.println("Apos converter para binario: ");                        
                         System.out.println(req);
+                        System.out.println("Apos converter para string: ");
+                        System.out.println(binaryToString(req));
+                        System.out.println("Terminou conversao de volta");
                         outToServer.writeBytes(req + "\n");
                         //out.println(req);
                         
@@ -129,6 +133,16 @@ public class HttpClient {
             return result;
         }
 
+        public static String binaryToString(String str) {
+            int resultLength = str.length() / 8;
+            char[] result = new char[resultLength];
+            for (int i = 0; i < resultLength; i++) {
+                 String sub = str.substring(i * 8, (i + 1) * 8);
+                 result[i] = (char) Integer.parseInt(sub, 2);
+            }
+            return (new String(result));
+        }
+        
 	public static void main(String[] args) {
 		HttpClient client = new HttpClient("localhost", 6768, "192.168.0.34");
 		try {
@@ -138,6 +152,7 @@ public class HttpClient {
 		} catch (IOException e) {
 			logger.log(Level.SEVERE, "Erro de entrada e saída!", e);
 		}
+
 
 	}
 
