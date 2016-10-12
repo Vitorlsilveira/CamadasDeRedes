@@ -43,7 +43,7 @@ class Cliente
 	end
 
 	def recebePDU()
-		puts "Ouvindo do cliente da aplicação na porta #{@port}"
+		puts "Ouvindo do cliente da aplicacao na porta #{@port}"
 		# espera pela conexão do cliente da camada de aplicação
 		client = @server.accept
 	  data = client.gets
@@ -52,7 +52,7 @@ class Cliente
 		return data.chomp
 	end
 
-	def executar(arquivo)
+	def executar()
 		puts "Aguardando PDU da camada superior"
 
 		#Lendo dados da camada de cima
@@ -108,7 +108,7 @@ class Cliente
    	#tipo indica o protocolo da camada superior e deve ser formatado para binario
 		type=  converteHexToBin("0800")
     #utilizado para deteccao de erros
-		crc = converteHexToBin(Digest::CRC32.hexdigest("#{arquivo}"))
+		crc = converteHexToBin(Digest::CRC32.hexdigest("#{pacote}"))
 
 		puts "Frame ethernet:\n"
 		puts "#{preambulo}#{macDestinoBinario}#{macOrigemBinario}#{type}#{pacote}#{crc}"
@@ -122,6 +122,8 @@ class Cliente
 		#pdu da camada fisica
 		quadro = preambulo+macDestinoBinario+macOrigemBinario+type+pacote+crc
 		puts "\nTamanho do quadro : #{quadro.size.to_f/8}"
+
+		File.write("quadro.txt", quadro)
 
 		#tenta conectar ate conseguir
 		puts "Aguardando servidor ficar disponivel!"
@@ -150,4 +152,4 @@ end
 
 
 c=Cliente.new ("wlan0")
-c.executar("../pacote.txt")
+c.executar()

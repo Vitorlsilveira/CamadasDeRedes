@@ -14,81 +14,77 @@ import java.util.logging.Logger;
 
 /**
  * Cliente HTTP simples para somente requisições GET
- * 
+ *
  * @author Thiago Galbiatti Vespa - <a
  *         href="mailto:thiago@thiagovespa.com.br">thiago@thiagovespa.com.br</a>
  * @version 1.1
- * 
+ *
  */
 public class HttpClient {
 
-	public final static Logger logger = Logger.getLogger(HttpClient.class.toString());
-	
-	/**
-	 * Versão do protocolo utilizada
-	 */
-	public final static String HTTP_VERSION = "HTTP/1.1";
+    public final static Logger logger = Logger.getLogger(HttpClient.class.toString());
 
-	private String host;
-	private int port;
-        private String myip;
+    /**
+     * Versão do protocolo utilizada
+     */
+    public final static String HTTP_VERSION = "HTTP/1.1";
 
-	/**
-	 * Construtor do cliente HTTP
-	 * @param host host para o cliente acessar
-	 * @param port porta de acesso
-	 */
-	public HttpClient(String host, int port, String myip) {
-		super();
-		this.host = host;
-		this.port = port;
-                this.myip = myip;
-	}
+    private String host;
+    private int port;
+    private String serverIP;
 
-	/**
-	 * Realiza uma requisição HTTP e devolve uma resposta
-	 * @param path caminho a ser feita a requisição
-	 * @return resposta do protocolo HTTP
-	 * @throws UnknownHostException quando não encontra o host
-	 * @throws IOException quando há algum erro de comunicação
-	 */
-	public String getURIRawContent(String path) throws UnknownHostException,
-			IOException {
-		Socket socket = null;
-		try {
-			// Abre a conexão
-                        Socket clientSocket = new Socket("localhost", 7777);
-                        DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
+    /**
+     * Construtor do cliente HTTP
+     *
+     * @param host host para o cliente acessar
+     * @param port porta de acesso
+     */
+    public HttpClient(String host, int port, String myip) {
+        super();
+        this.host = host;
+        this.port = port;
+        this.serverIP = myip;
+    }
 
-                        String req = "";
+    /**
+     * Realiza uma requisição HTTP e devolve uma resposta
+     *
+     * @param path caminho a ser feita a requisição
+     * @return resposta do protocolo HTTP
+     * @throws UnknownHostException quando não encontra o host
+     * @throws IOException quando há algum erro de comunicação
+     */
+    public String getURIRawContent(String path) throws UnknownHostException,
+            IOException {
+        Socket socket = null;
+        try {
+            // Abre a conexão
+            Socket clientSocket = new Socket("localhost", 7777);
+            DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
 
-			// Envia a requisição
-                        req += this.myip + ":" + "7777" + ";" + this.host + ":" + "6969" + ";";
-			req += "GET " + path + " " + HTTP_VERSION + "\n";
-			req += "Host: " + this.host + "\n";
-			req += "Connection: Close;";
-                        System.out.println("Antes de converter para binario: ");
-                        System.out.println(req);
-                        escritor("src/cliente/requisicaoEmTextoCA.txt",req);
-			req = toBinary(req, 8);
-                        escritor("src/cliente/requisicaoEmBinarioCA.txt",req);                        
-                        System.out.println("Apos converter para binario: ");                        
-                        System.out.println(req);
-                        System.out.println("Apos converter para string: ");
-                        System.out.println(binaryToString(req));
-                        System.out.println("Terminou conversao de volta");
-                        outToServer.writeBytes(req + "\n");
+            String req = "";
+
+            // Envia a requisição
+            req += this.serverIP + ":" + "7777" + ";" + this.host + ":" + "6969" + ";";
+            req += "GET " + path + " " + HTTP_VERSION + "\n";
+            req += "Host: " + this.host + "\n";
+            req += "Connection: Close;";
+            //escritor("requisicaoEmTextoCA.txt", req);
+            String reqBin = toBinary(req, 8);
+            escritor("pacote.txt", reqBin);
+            System.out.println("Pacote: \n\n" + req + "\n\n" + reqBin + "\n\n");
+            outToServer.writeBytes(reqBin + "\n");
                         //out.println(req);
-                        
-                        System.out.println("GET " + path + " " + HTTP_VERSION);
-			System.out.println("Host: " + this.host);
-			System.out.println("Connection: Close");
-			System.out.println();
+/*
+            System.out.println("GET " + path + " " + HTTP_VERSION);
+            System.out.println("Host: " + this.host);
+            System.out.println("Connection: Close");
+            System.out.println();
+*/
+            boolean loop = true;
+            StringBuffer sb = new StringBuffer();
 
-			boolean loop = true;
-			StringBuffer sb = new StringBuffer();
-
-			// recupera a resposta quando ela estiver disponível
+            // recupera a resposta quando ela estiver disponível
 //			while (loop) {
 //				if (in.ready()) {
 //					int i = 0;
@@ -98,72 +94,71 @@ public class HttpClient {
 //					loop = false;
 //				}
 //			}
-			return sb.toString();
-		} finally {
-			if (socket != null) {
-				socket.close();
-			}
-		}
-	}
+            return sb.toString();
+        } finally {
+            if (socket != null) {
+                socket.close();
+            }
+        }
+    }
 
-        public static String toBinary(String str, int bits) {
-            String result = "";
-            String tmpStr;
-            int tmpInt;
-            char[] messChar = str.toCharArray();
+    public static String toBinary(String str, int bits) {
+        String result = "";
+        String tmpStr;
+        int tmpInt;
+        char[] messChar = str.toCharArray();
 
-            for (int i = 0; i < messChar.length; i++) {
-                // Converte individualmente cada char para binario
-                tmpStr = Integer.toBinaryString(messChar[i]);
-                tmpInt = tmpStr.length();
-                // Caso o tamanho for menor que 8 entao completamos o que falta com zeros a esquerda
-                if(tmpInt != bits) {
-                    tmpInt = bits - tmpInt;
-                    if (tmpInt == bits) {
-                        result += tmpStr;
-                    } else if (tmpInt > 0) {
-                        for (int j = 0; j < tmpInt; j++) {
-                            result += "0";
-                        }
-                        result += tmpStr;
-                    } else {
-                        System.err.println("argument 'bits' is too small");
-                    }
-                } else {
+        for (int i = 0; i < messChar.length; i++) {
+            // Converte individualmente cada char para binario
+            tmpStr = Integer.toBinaryString(messChar[i]);
+            tmpInt = tmpStr.length();
+            // Caso o tamanho for menor que 8 entao completamos o que falta com zeros a esquerda
+            if (tmpInt != bits) {
+                tmpInt = bits - tmpInt;
+                if (tmpInt == bits) {
                     result += tmpStr;
+                } else if (tmpInt > 0) {
+                    for (int j = 0; j < tmpInt; j++) {
+                        result += "0";
+                    }
+                    result += tmpStr;
+                } else {
+                    System.err.println("argument 'bits' is too small");
                 }
+            } else {
+                result += tmpStr;
             }
-
-            return result;
         }
 
-        public static String binaryToString(String str) {
-            int resultLength = str.length() / 8;
-            char[] result = new char[resultLength];
-            for (int i = 0; i < resultLength; i++) {
-                 String sub = str.substring(i * 8, (i + 1) * 8);
-                 result[i] = (char) Integer.parseInt(sub, 2);
-            }
-            return (new String(result));
-        }
-       
-        private static void escritor(String path,String dados) throws IOException {
-            BufferedWriter buffWrite = new BufferedWriter(new FileWriter(path));
-            buffWrite.append(dados + "\n");
-            buffWrite.close();
-        }
-        
-	public static void main(String[] args) {
-		HttpClient client = new HttpClient("localhost", 6768, "192.168.0.34");
-		try {
-			System.out.println(client.getURIRawContent("/hello.html"));
-		} catch (UnknownHostException e) {
-			logger.log(Level.SEVERE, "Host desconhecido!", e);
-		} catch (IOException e) {
-			logger.log(Level.SEVERE, "Erro de entrada e saída!", e);
-		}
+        return result;
+    }
 
+    public static String binaryToString(String str) {
+        int resultLength = str.length() / 8;
+        char[] result = new char[resultLength];
+        for (int i = 0; i < resultLength; i++) {
+            String sub = str.substring(i * 8, (i + 1) * 8);
+            result[i] = (char) Integer.parseInt(sub, 2);
+        }
+        return (new String(result));
+    }
 
-	}
+    private static void escritor(String path, String dados) throws IOException {
+        BufferedWriter buffWrite = new BufferedWriter(new FileWriter(path));
+        buffWrite.append(dados + "\n");
+        buffWrite.close();
+    }
+
+    public static void main(String[] args) {
+        HttpClient client = new HttpClient("localhost", 6768, "192.168.0.106");
+        try {
+            System.out.println(client.getURIRawContent("/hello.html"));
+        } catch (UnknownHostException e) {
+            logger.log(Level.SEVERE, "Host desconhecido!", e);
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Erro de entrada e saída!", e);
+        }
+
+    }
 
 }

@@ -21,7 +21,7 @@ class Servidor
 
   def enviaPDU(ip,porta,dados)
     #tenta conectar ate conseguir
-		puts "To esperando servidor da aplicação ficar disponivel!"
+		puts "To esperando servidor da aplicacao ficar disponivel!"
 		sock1 = 0
 		while sock1==0
       begin
@@ -32,7 +32,7 @@ class Servidor
 			end
 		end
     sock1.write dados;
-    puts "Enviei para o servidor da aplicação!"
+    puts "Enviei para o servidor da aplicacao!"
 	end
 
   def executar
@@ -67,8 +67,8 @@ class Servidor
     		puts "Crc : #{crc}"
         puts "\n\n"
 
-        File.write("../pacote_recebido.txt", data)
-        enviaPDU("127.0.0.1",6768,data)
+        File.write("quadro_recebido.txt", data)
+        enviaPDU("localhost",6768,data)
       end
     }
   end
