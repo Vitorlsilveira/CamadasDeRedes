@@ -91,13 +91,15 @@ public class HttpServer {
                 //escritor("respostaDaFisicaEmTextoSA.txt",saida);                                
                 Request request = new Request();
                 request.parse(saida);
-                /*
-                 // recupera a resposta de acordo com a requisicao
-                 Response response = new Response(request);
-                 String responseString = response.respond();
-                 logger.info("Resposta enviada. Conteúdo:\n" + responseString);
-                 escritor("respostaDaRequisicaoSA.txt",responseString);
-                 */
+                
+                // recupera a resposta de acordo com a requisicao
+                Response response = new Response(request);
+                String responseString = response.respond();
+                System.out.println("Resposta enviada. Conteúdo:\n" + responseString);
+                escritor("resposta.txt",responseString);
+                
+                output.write(responseString.getBytes());
+                 
                 // Fecha a conexão
                 socket.close();
 

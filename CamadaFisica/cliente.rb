@@ -42,22 +42,17 @@ class Cliente
 		return saida
 	end
 
-	def recebePDU()
-		puts "Ouvindo do cliente da aplicacao na porta #{@port}"
-		# espera pela conexão do cliente da camada de aplicação
-		client = @server.accept
-	  data = client.gets
-		puts data
-	  client.close
-		return data.chomp
-	end
-
 	def executar()
 		puts "Aguardando PDU da camada superior"
 
 		#Lendo dados da camada de cima
 		dados = []
-		pacote = recebePDU()
+		puts "Ouvindo do cliente da aplicacao na porta #{@port}"
+		# espera pela conexão do cliente da camada de aplicação
+		client = @server.accept
+	  data = client.gets
+		pacote = data.chomp
+
 		dados << pacote
 		dados = dados.pack("B*")
 		puts dados
@@ -143,9 +138,22 @@ class Cliente
 		#Pergunta ao servidor qual sera o tamanho maximo do quadro
 		sock.puts("Qual o tamanho maximo do quadro(TMQ) ?\000", 0)
 		tamanhoQuadroBytes = sock.gets
+		puts "TMQ = #{tamanhoQuadroBytes}"
 
 		#Agora vamos enviar o quadro
-		sock.write quadro;
+		sock.puts quadro;
+
+		puts "Recebendo resposta do servidor .. .. .. .. .. \n\n"
+		resp = ""
+		while line = sock.gets
+			puts line
+			resp += line
+		end
+		puts resp
+		puts "\n\n"
+		puts "Enviando para Aplicacao"
+		client.puts resp
+		client.close
 	end
 
 end

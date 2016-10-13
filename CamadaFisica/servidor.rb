@@ -19,7 +19,7 @@ class Servidor
 		return saida
 	end
 
-  def enviaPDU(ip,porta,dados)
+  def conectaApp(ip,porta,dados)
     #tenta conectar ate conseguir
 		puts "To esperando servidor da aplicacao ficar disponivel!"
 		sock1 = 0
@@ -32,7 +32,12 @@ class Servidor
 			end
 		end
     sock1.write dados;
-    puts "Enviei para o servidor da aplicacao!"
+    resposta = ""
+    puts "Enviei para o servidor da aplicacao! Esperando resposta..."
+    while line = sock1.gets
+      resposta += line
+    end
+    return resposta
 	end
 
   def executar
@@ -40,8 +45,7 @@ class Servidor
     loop {
       Thread.start(@server.accept) do |client|
         puts "Conectado"
-        data = client.gets
-        puts data
+        puts client.gets
 
         #Aqui definimos o TMQ
         @TMQ = gets
@@ -68,7 +72,13 @@ class Servidor
         puts "\n\n"
 
         File.write("quadro_recebido.txt", data)
-        enviaPDU("localhost",6768,data)
+        resposta = conectaApp("localhost",6768,data)
+        puts "\nRESPOSTA =\n"
+        puts resposta
+        puts "\n\n"
+        puts "Enviando para o cliente a resposta..."
+        client.puts resposta
+        client.close
       end
     }
   end

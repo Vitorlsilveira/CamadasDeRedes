@@ -49,7 +49,7 @@ public class Response{
                 try {
                     // O diretorio onde se encontram as paginas é o pages/
                     // Esse .substring(1) serve para remover o / que acompanha o URI
-                    this.content = readFile("pages/" + request.getUri().substring(1), StandardCharsets.UTF_8);
+                    this.content = readFile(request.getUri().substring(1), StandardCharsets.UTF_8);
                 } catch (IOException ex) {
                     Logger.getLogger(Response.class.getName()).log(Level.SEVERE, null, ex);
                 }

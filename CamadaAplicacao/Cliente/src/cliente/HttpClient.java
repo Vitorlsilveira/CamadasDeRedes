@@ -7,6 +7,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.ConnectException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.logging.Level;
@@ -31,7 +32,7 @@ public class HttpClient {
 
     private String host;
     private int port;
-    private String serverIP;
+    private String myip;
 
     /**
      * Construtor do cliente HTTP
@@ -43,7 +44,7 @@ public class HttpClient {
         super();
         this.host = host;
         this.port = port;
-        this.serverIP = myip;
+        this.myip = myip;
     }
 
     /**
@@ -56,16 +57,23 @@ public class HttpClient {
      */
     public String getURIRawContent(String path) throws UnknownHostException,
             IOException {
-        Socket socket = null;
+        Socket clientSocket = null;
         try {
             // Abre a conexão
-            Socket clientSocket = new Socket("localhost", 7777);
+            while(true) {
+                try {
+                    clientSocket = new Socket("localhost", 7777);
+                    break;
+                } catch(ConnectException ex) {
+                }
+            }
             DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
+            BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 
             String req = "";
 
             // Envia a requisição
-            req += this.serverIP + ":" + "7777" + ";" + this.host + ":" + "6969" + ";";
+            req += this.myip + ":" + "7777" + ";" + this.host + ":" + "6969" + ";";
             req += "GET " + path + " " + HTTP_VERSION + "\n";
             req += "Host: " + this.host + "\n";
             req += "Connection: Close;";
@@ -76,28 +84,27 @@ public class HttpClient {
             outToServer.writeBytes(reqBin + "\n");
                         //out.println(req);
 /*
-            System.out.println("GET " + path + " " + HTTP_VERSION);
-            System.out.println("Host: " + this.host);
-            System.out.println("Connection: Close");
-            System.out.println();
-*/
+             System.out.println("GET " + path + " " + HTTP_VERSION);
+             System.out.println("Host: " + this.host);
+             System.out.println("Connection: Close");
+             System.out.println();
+             */
             boolean loop = true;
-            StringBuffer sb = new StringBuffer();
-
+            StringBuilder sb = new StringBuilder();
             // recupera a resposta quando ela estiver disponível
-//			while (loop) {
-//				if (in.ready()) {
-//					int i = 0;
-//					while ((i = in.read()) != -1) {
-//						sb.append((char) i);
-//					}
-//					loop = false;
-//				}
-//			}
+            while (loop) {
+                if (inFromServer.ready()) {
+                    int i = 0;
+                    while ((i = inFromServer.read()) != -1) {
+                        sb.append((char) i);
+                    }
+                    loop = false;
+                }
+            }
             return sb.toString();
         } finally {
-            if (socket != null) {
-                socket.close();
+            if (clientSocket != null) {
+                clientSocket.close();
             }
         }
     }

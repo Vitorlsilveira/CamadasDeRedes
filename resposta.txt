@@ -1,0 +1,19 @@
+HTTP/1.1 200 OK
+Date: Qua, 12 out 2016 21:48:33 BRT
+Server: Servidor dos Maneis
+Connection: Close
+Content-Type: text/html; charset=UTF-8
+
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+   <HEAD>
+      <TITLE>
+         Um simples oi.
+      </TITLE>
+   </HEAD>
+<BODY>
+   <H1>Ola!</H1>
+   <P>Como vai, Manel?</P> 
+</BODY>
+</HTML>
+
