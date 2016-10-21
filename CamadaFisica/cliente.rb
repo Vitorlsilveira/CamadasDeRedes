@@ -51,10 +51,11 @@ class Cliente
 		# espera pela conexão do cliente da camada de aplicação
 		client = @server.accept
 	  data = client.gets
-		pacote = data.chomp
+		dados = data
 
-		dados << pacote
-		dados = dados.pack("B*")
+		pacote = dados.unpack("B*")[0]
+		pacote = pacote.to_s
+		puts pacote
 		puts dados
 
 		origem = dados.split(";")[0]
@@ -144,16 +145,11 @@ class Cliente
 		sock.puts quadro;
 
 		puts "Recebendo resposta do servidor .. .. .. .. .. \n\n"
-		resp = ""
-		while line = sock.gets
-			puts line
-			resp += line
-		end
-		puts resp
-		puts "\n\n"
+		resp = sock.gets
 		puts "Enviando para Aplicacao"
-		client.puts resp
-		client.close
+		client.puts [resp].pack('B*')
+		
+		#client.close
 	end
 
 end

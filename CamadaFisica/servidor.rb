@@ -72,12 +72,13 @@ class Servidor
         puts "\n\n"
 
         File.write("quadro_recebido.txt", data)
-        resposta = conectaApp("localhost",6768,data)
+        resposta = conectaApp("localhost",6768,[data].pack("B*"))
         puts "\nRESPOSTA =\n"
         puts resposta
+        respostaBin = [resposta].pack('B*')
         puts "\n\n"
         puts "Enviando para o cliente a resposta..."
-        client.puts resposta
+        client.puts respostaBin
         client.close
       end
     }

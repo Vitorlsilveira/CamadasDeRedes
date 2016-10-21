@@ -77,18 +77,11 @@ public class HttpClient {
             req += "GET " + path + " " + HTTP_VERSION + "\n";
             req += "Host: " + this.host + "\n";
             req += "Connection: Close;";
-            //escritor("requisicaoEmTextoCA.txt", req);
-            String reqBin = toBinary(req, 8);
-            escritor("pacote.txt", reqBin);
-            System.out.println("Pacote: \n\n" + req + "\n\n" + reqBin + "\n\n");
-            outToServer.writeBytes(reqBin + "\n");
-                        //out.println(req);
-/*
-             System.out.println("GET " + path + " " + HTTP_VERSION);
-             System.out.println("Host: " + this.host);
-             System.out.println("Connection: Close");
-             System.out.println();
-             */
+            
+            escritor("requisicaoEmTextoCA.txt", req);
+            //System.out.println("Pacote: \n\n" + req + "\n\n" + reqBin + "\n\n");
+            outToServer.writeBytes(req + "\n");
+
             boolean loop = true;
             StringBuilder sb = new StringBuilder();
             // recupera a resposta quando ela estiver disponível
@@ -108,48 +101,7 @@ public class HttpClient {
             }
         }
     }
-
-    public static String toBinary(String str, int bits) {
-        String result = "";
-        String tmpStr;
-        int tmpInt;
-        char[] messChar = str.toCharArray();
-
-        for (int i = 0; i < messChar.length; i++) {
-            // Converte individualmente cada char para binario
-            tmpStr = Integer.toBinaryString(messChar[i]);
-            tmpInt = tmpStr.length();
-            // Caso o tamanho for menor que 8 entao completamos o que falta com zeros a esquerda
-            if (tmpInt != bits) {
-                tmpInt = bits - tmpInt;
-                if (tmpInt == bits) {
-                    result += tmpStr;
-                } else if (tmpInt > 0) {
-                    for (int j = 0; j < tmpInt; j++) {
-                        result += "0";
-                    }
-                    result += tmpStr;
-                } else {
-                    System.err.println("argument 'bits' is too small");
-                }
-            } else {
-                result += tmpStr;
-            }
-        }
-
-        return result;
-    }
-
-    public static String binaryToString(String str) {
-        int resultLength = str.length() / 8;
-        char[] result = new char[resultLength];
-        for (int i = 0; i < resultLength; i++) {
-            String sub = str.substring(i * 8, (i + 1) * 8);
-            result[i] = (char) Integer.parseInt(sub, 2);
-        }
-        return (new String(result));
-    }
-
+    
     private static void escritor(String path, String dados) throws IOException {
         BufferedWriter buffWrite = new BufferedWriter(new FileWriter(path));
         buffWrite.append(dados + "\n");
@@ -157,7 +109,7 @@ public class HttpClient {
     }
 
     public static void main(String[] args) {
-        HttpClient client = new HttpClient("localhost", 6768, "192.168.0.106");
+        HttpClient client = new HttpClient("localhost", 6768, "localhost");
         try {
             System.out.println(client.getURIRawContent("/hello.html"));
         } catch (UnknownHostException e) {

@@ -83,7 +83,7 @@ public class HttpServer {
 
                 // Realiza o parse da requisição recebida
                 String requestString = convertStreamToString(input);
-                String saida = binaryToString(requestString);
+                String saida = requestString;
                 /*System.out.println("Conexão recebida. Conteúdo em binário:\n" + requestString);
                 System.out.println("Conexão recebida. Conteúdo em texto:\n\n" + saida + "\n\n");*/
                 System.out.println("Conteudo recebido: \n\n "+ saida + "\n\n" + requestString + "\n\n" );
@@ -136,15 +136,6 @@ public class HttpServer {
         }
     }
 
-    public static String binaryToString(String str) {
-        int resultLength = str.length() / 8;
-        char[] result = new char[resultLength];
-        for (int i = 0; i < resultLength; i++) {
-            String sub = str.substring(i * 8, (i + 1) * 8);
-            result[i] = (char) Integer.parseInt(sub, 2);
-        }
-        return (new String(result));
-    }
 
     public static void main(String[] args) {
         //Scanner reader = new Scanner(System.in);  
