@@ -81,17 +81,16 @@ public class HttpClient {
             escritor("requisicaoEmTextoCA.txt", req);
             //System.out.println("Pacote: \n\n" + req + "\n\n" + reqBin + "\n\n");
             outToServer.writeBytes(req + "\n");
-
-            boolean loop = true;
+            
             StringBuilder sb = new StringBuilder();
             // recupera a resposta quando ela estiver disponível
-            while (loop) {
+            while (true) {
                 if (inFromServer.ready()) {
                     int i = 0;
-                    while ((i = inFromServer.read()) != -1) {
+                    while (inFromServer.ready() && (i = inFromServer.read()) != -1) {
                         sb.append((char) i);
                     }
-                    loop = false;
+                    break;
                 }
             }
             return sb.toString();

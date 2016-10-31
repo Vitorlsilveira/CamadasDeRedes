@@ -147,8 +147,10 @@ class Cliente
 		puts "Recebendo resposta do servidor .. .. .. .. .. \n\n"
 		resp = sock.gets
 		puts "Enviando para Aplicacao"
+
+		puts [resp].pack('B*')
 		client.puts [resp].pack('B*')
-		
+
 		#client.close
 	end
 
