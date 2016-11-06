@@ -62,25 +62,27 @@ public class HttpClient {
             // Abre a conexão
             while(true) {
                 try {
-                    clientSocket = new Socket("localhost", 7777);
+                    clientSocket = new Socket("localhost", 3333);
                     break;
                 } catch(ConnectException ex) {
                 }
             }
-            DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
+            
+            PrintWriter outToServer = new PrintWriter(clientSocket.getOutputStream(), true);
+            
+            //DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
             BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 
             String req = "";
 
             // Envia a requisição
-            req += this.myip + ":" + "7777" + ";" + this.host + ":" + "6969" + ";";
             req += "GET " + path + " " + HTTP_VERSION + "\n";
             req += "Host: " + this.host + "\n";
             req += "Connection: Close;";
             
             escritor("requisicaoEmTextoCA.txt", req);
             //System.out.println("Pacote: \n\n" + req + "\n\n" + reqBin + "\n\n");
-            outToServer.writeBytes(req + "\n");
+            outToServer.println(req);
             
             StringBuilder sb = new StringBuilder();
             // recupera a resposta quando ela estiver disponível

@@ -46,39 +46,37 @@ class Cliente
 		puts "Aguardando PDU da camada superior"
 
 		#Lendo dados da camada de cima
-		dados = []
+		dados = ""
 		puts "Ouvindo do cliente da aplicacao na porta #{@port}"
 		# espera pela conexão do cliente da camada de aplicação
 		client = @server.accept
-	  data = client.gets
-		dados = data
+		while data = client.gets
+			dados += data
+		end
 
 		pacote = dados.unpack("B*")[0]
 		pacote = pacote.to_s
 		puts pacote
 		puts dados
 
-		origem = dados.split(";")[0]
-		destino = dados.split(";")[1]
-		msg = dados.split(";")[2]
-
-		#origem
 		#pega o IP do arquivo
-		origemIP = origem.split(":")[0]
-		#pega a porta do arquivo
-		origemPorta = origem.split(":")[1].to_i
-
-		#destino
+		origemIP = dados.split(";")[0]
 		#pega o IP do arquivo
-		destinoIP = destino.split(":")[0]
+		destinoIP = dados.split(";")[1]
 		#pega a porta do arquivo
-		destinoPorta = destino.split(":")[1].to_i
+		origemPorta = dados.split(";")[2].to_i
+		#pega a porta do arquivo
+		destinoPorta = dados.split(";")[3].to_i
+
+
+		#conteudo
+		msg = dados.split(";")[6]
 
 		#porta = dados.split(";")[1].to_i;
 
 		puts "Ip do destinatario: #{destinoIP}"
 		puts "Porta: #{destinoPorta}"
-		puts "Dados: \n\n#{msg}\n\n"
+		puts "Dados: \n#{msg}\n"
 
 		#pega o mac do destino
 		macDestino = get_mac_address(destinoIP)

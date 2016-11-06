@@ -19,7 +19,7 @@ class Servidor
 		return saida
 	end
 
-  def conectaApp(ip,porta,dados)
+  def conectaTransporte(ip,porta,dados)
     #tenta conectar ate conseguir
 		puts "To esperando servidor da aplicacao ficar disponivel!"
 		sock1 = 0
@@ -72,7 +72,7 @@ class Servidor
         puts "\n\n"
 
         File.write("quadro_recebido.txt", data)
-        resposta = conectaApp("localhost",6768,[data].pack("B*"))
+        resposta = conectaTransporte("localhost",6768,[data].pack("B*"))
         puts "\nRESPOSTA =\n"
         puts resposta
         respostaBin = resposta.unpack('B*')
@@ -86,5 +86,5 @@ class Servidor
     }
   end
 end
-servidor = Servidor.new(6969)
+servidor = Servidor.new(5555)
 servidor.executar

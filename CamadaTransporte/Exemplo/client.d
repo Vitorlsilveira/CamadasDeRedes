@@ -11,7 +11,7 @@ void main() {
       socket.connect(new InternetAddress("localhost", 7777));
 
       socket.send(linha~"\n");
-      
+
       // Esperando o servidor confirmar recebimento
       auto len = socket.receive(buffer);
       writeln(buffer[0 .. len]);
