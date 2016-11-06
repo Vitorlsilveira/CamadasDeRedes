@@ -50,9 +50,7 @@ class Cliente
 		puts "Ouvindo do cliente da aplicacao na porta #{@port}"
 		# espera pela conexão do cliente da camada de aplicação
 		client = @server.accept
-		while data = client.gets
-			dados += data
-		end
+		dados = client.gets
 
 		pacote = dados.unpack("B*")[0]
 		pacote = pacote.to_s
@@ -102,6 +100,7 @@ class Cliente
    	#tipo indica o protocolo da camada superior e deve ser formatado para binario
 		type=  converteHexToBin("0800")
     #utilizado para deteccao de erros
+		puts "\nCRC HEX ==  #{Digest::CRC32.hexdigest("#{pacote}")}\n"
 		crc = converteHexToBin(Digest::CRC32.hexdigest("#{pacote}"))
 
 		puts "Frame ethernet:\n"
@@ -112,6 +111,8 @@ class Cliente
 		puts "Tamanho do type : #{type.size.to_f/8}"
 		puts "Tamanho do pacote : #{pacote.size.to_f/8}"
 		puts "Tamanho do crc : #{crc.size.to_f/8}"
+
+		puts "CRC = #{crc}"
 
 		#pdu da camada fisica
 		quadro = preambulo+macDestinoBinario+macOrigemBinario+type+pacote+crc
@@ -125,7 +126,7 @@ class Cliente
 		sock = 0
 		while sock==0
       begin
-			sock = TCPSocket.open(destinoIP, destinoPorta)
+			sock = TCPSocket.open(destinoIP, destinoPorta-1)
 			rescue
 				sock=0
         sleep 1
@@ -149,7 +150,7 @@ class Cliente
 		puts [resp].pack('B*')
 		client.puts [resp].pack('B*')
 
-		#client.close
+		client.close
 	end
 
 end

@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.BufferedWriter;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -19,7 +18,6 @@ import java.util.logging.Logger;
 
 import classes.request.Request;
 import classes.response.Response;
-import java.util.Scanner;
 
 /**
  * Servidor HTTP simples
@@ -141,7 +139,7 @@ public class HttpServer {
         //Scanner reader = new Scanner(System.in);  
         //System.out.println("Qual o endereco?");
                 /*String ip = reader.nextLine();*/
-        HttpServer server = new HttpServer("localhost", 6768);
+        HttpServer server = new HttpServer("localhost", 5555);
         server.serve();
     }
 

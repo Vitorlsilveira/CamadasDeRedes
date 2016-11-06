@@ -30,14 +30,22 @@ class ClienteUDP {
     cliente = listener.accept();
     dadoslen = cliente.receive(dados);
 
-    writeln(buffer[0 .. dadoslen]);
+    writeln(dados[0 .. dadoslen]);
 
   }
 
   void enviaFisica(){
     auto socket = new Socket(AddressFamily.INET,  SocketType.STREAM);
-    socket.connect(new InternetAddress("localhost", 7777));
-
+    writeln("Aguardando cliente da camada fisica");
+    while(true){
+      try {
+        socket.connect(new InternetAddress("localhost", 7777));
+        writeln("Conectado");
+        break;
+      } catch( Exception e ){
+        continue;
+      }
+    }
     //localhost:07777;localhost:06969;
     string abstracaoRede = "localhost;" ~ "localhost;";
 
@@ -47,12 +55,18 @@ class ClienteUDP {
 
     ushort checksum = checksum16(cast(char*)dados[0 .. dadoslen], cast(int)dadoslen);
 
-    cabecalho = to!string(checksum) ~ ";\n";
+    cabecalho = cabecalho ~ to!string(checksum) ~ ";";
 
     segmento = abstracaoRede ~ cabecalho ~ to!string(dados[0 .. dadoslen]);
 
     writeln(segmento);
     socket.send(segmento);
+
+    //aguarda resposta
+    dadoslen = socket.receive(dados);
+    //encaminha resposta cliente aplicacao
+    cliente.send(dados[0 .. dadoslen]);
+    cliente.close();
   }
 
 

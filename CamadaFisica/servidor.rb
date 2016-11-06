@@ -60,8 +60,8 @@ class Servidor
         macDestino = converteBinToHex(dados[64..111])
         macOrigem = converteBinToHex(dados[112..159])
         type = dados[160..175].to_i(2)
-        data = dados[176..dados.size-33]
-        crc = converteBinToHex(dados[dados.size-32..dados.size-1])
+        data = dados[176..dados.size-34]
+        crc = converteBinToHex(dados[dados.size-33..dados.size-1])
 
         puts "Preambulo : #{preambulo}"
     		puts "Mac Destino : #{macDestino}"
@@ -86,5 +86,5 @@ class Servidor
     }
   end
 end
-servidor = Servidor.new(5555)
+servidor = Servidor.new(5554)
 servidor.executar
