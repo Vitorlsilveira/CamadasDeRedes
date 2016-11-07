@@ -58,22 +58,25 @@ class Cliente
 		puts dados
 
 		#pega o IP do arquivo
-		origemIP = dados.split(";")[0]
+		origemIP = "localhost"
 		#pega o IP do arquivo
-		destinoIP = dados.split(";")[1]
+		destinoIP = "localhost"
 		#pega a porta do arquivo
-		origemPorta = dados.split(";")[2].to_i
+		#origemPorta = dados.split(";")[2].to_i
+		origemPorta = dados[0..1].unpack("S")[0]
 		#pega a porta do arquivo
-		destinoPorta = dados.split(";")[3].to_i
-
+		#destinoPorta = dados.split(";")[3].to_i
+		destinoPorta = dados[2..3].unpack("S")[0]
 
 		#conteudo
 		msg = dados.split(";")[6]
 
 		#porta = dados.split(";")[1].to_i;
 
+		puts "Ip de origem: #{origemIP}"
 		puts "Ip do destinatario: #{destinoIP}"
-		puts "Porta: #{destinoPorta}"
+		puts "Porta origem: #{origemPorta}"
+		puts "Porta destino: #{destinoPorta}"
 		puts "Dados: \n#{msg}\n"
 
 		#pega o mac do destino
@@ -121,12 +124,12 @@ class Cliente
 		File.write("quadro.txt", quadro)
 
 		#tenta conectar ate conseguir
-		puts "Aguardando servidor ficar disponivel!"
+		puts "Aguardando servidor ficar disponivel na porta 5554!"
 
 		sock = 0
 		while sock==0
       begin
-			sock = TCPSocket.open(destinoIP, destinoPorta-1)
+			sock = TCPSocket.open(destinoIP, 5554)
 			rescue
 				sock=0
         sleep 1

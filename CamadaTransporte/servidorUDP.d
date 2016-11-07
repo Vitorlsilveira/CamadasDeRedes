@@ -4,6 +4,7 @@ import std.conv;
 import std.process: thisProcessID;
 import std.file;
 import std.string;
+import std.bitmanip;
 
 
 class ServidorUDP {
@@ -46,12 +47,11 @@ class ServidorUDP {
     servidor = listener.accept();
     dadoslen = servidor.receive(dados);
 
-    char[][] array = split(dados[0 .. dadoslen], ";");
-    portaOrigem = to!int(array[2]);
-    portaDestino = to!int(array[3]);
+    portaOrigem = cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[0..2]);
+    portaDestino = cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[2..4]);
     writeln("Porta origem = " ~ to!string(portaOrigem));
     writeln("Porta destino = " ~ to!string(portaDestino));
-    mensagem = array[6];
+    mensagem = dados[8..dadoslen];
   }
 
   ushort checksum16(char* addr, int count){
@@ -59,29 +59,23 @@ class ServidorUDP {
     *         beginning at location "addr".
     */
     ushort sum = 0;
-
     while( count > 1 )  {
       /*  This is the inner loop */
       sum += * cast(ushort *) addr++;
       count -= 2;
     }
-
     /*  Add left-over byte, if any */
     if( count > 0 )
-    sum += * cast(wchar *) addr;
-
+      sum += * cast(wchar *) addr;
     /*  Fold 32-bit sum to 16 bits */
     while (sum>>16)
-    sum = (sum & 0xffff) + (sum >> 16);
-
+      sum = (sum & 0xffff) + (sum >> 16);
     ushort checksum = ~sum;
     return checksum;
   }
 }
 
 void main() {
-  const port = thisProcessID;
-
   auto servidor = new ServidorUDP();
   while(true) {
     servidor.recebeFisica();
