@@ -50,7 +50,7 @@ class ClienteUDP {
 
   void executa() {
     conectaFisica();
-  //  enviaFisica(cast(char[])"1110111", 7);
+    enviaFisica(cast(char[])"1110111", 7);
     recebeAplicacao();
     enviaFisica(dados, dadoslen);
 

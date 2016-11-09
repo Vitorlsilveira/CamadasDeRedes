@@ -102,7 +102,10 @@ class Cliente
 		puts "Ouvindo do cliente da aplicacao na porta #{@port}"
 		# espera pela conexão do cliente da camada de aplicação
 		client = @server.accept
+
 		dados = client.gets
+		dados += client.gets
+		dados += client.gets
 
 		pacote = lerPacote(dados)
 		conectaServidor()

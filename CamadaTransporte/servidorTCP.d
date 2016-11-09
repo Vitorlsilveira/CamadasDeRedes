@@ -16,11 +16,11 @@ class ServidorTCP {
   int numeroReconhecimento;
   int comprimentoCabecalho;
   char[10000] bufferRemetente;
-  byte bitsControle;
-  char[] mensagem;
-  char[] bufferDestinatario;
-  char[10000] dados;
+  char bitsControle;
   long dadoslen;
+  ushort checksum;
+  char[10000] dados;
+  char[] mensagem;
 
   Socket listener, servidor;
 
@@ -42,38 +42,37 @@ class ServidorTCP {
     }
     writeln("\nEnviando para Aplicacao \n" ~ mensagem);
     // Envia a requisicao pra aplicacao
-    socket.send(bufferDestinatario);
+    socket.send(mensagem);
     //recebe resposta
     dadoslen = socket.receive(dados);
     //encaminha resposta pra fisica
     servidor.send(dados[0 .. dadoslen-1]);
     servidor.close();
   }
-  
-  void separaSegmento(char *dados,int tam){
+
+  void separaSegmento(char *dados,long tam){
     portaOrigem = cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[0..2]);
-    writeln("Porta origem:"~to!string(portaOrigem));
+//    writeln("Porta origem:"~to!string(portaOrigem));
     portaDestino = cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[2..4]);
-    writeln("Porta destino:"~to!string(portaDestino));
+  //  writeln("Porta destino:"~to!string(portaDestino));
     numeroSequencia=cast(int)littleEndianToNative!(uint,4)(cast(ubyte[4])dados[4..8]);
-    writeln("sequencia:"~to!string(numeroSequencia));
+    //writeln("sequencia:"~to!string(numeroSequencia));
     numeroReconhecimento=cast(int)littleEndianToNative!(uint,4)(cast(ubyte[4])dados[8..12]);
-    writeln("reconhecimento:"~to!string(numeroReconhecimento));
+    //writeln("reconhecimento:"~to!string(numeroReconhecimento));
     bitsControle=cast(char)littleEndianToNative!(byte,1)(cast(ubyte[1])dados[12..13]);
-    writeln("bits controle:"~to!string(bitsControle));
+    //writeln("bits controle:"~to!string(bitsControle));
     janela=cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[13..15]);
-    writeln("janela:"~to!string(janela));
+    //writeln("janela:"~to!string(janela));
     comprimentoCabecalho=cast(int)littleEndianToNative!(byte,1)(cast(ubyte[1])dados[15..16]);
-    writeln("comprimento cabecalho:"~to!string(comprimentoCabecalho));
-    writeln(strlen(dados));
-    mensagem=to!string(dados[18..(tamanhoVetor-1)]);
-  //  checksum=cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[16..18]);
+    //writeln("comprimento cabecalho:"~to!string(comprimentoCabecalho));
+    checksum=cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[16..18]);
+    mensagem=dados[19..tam];
   }
 
   void recebeFisica(){
     servidor = listener.accept();
     dadoslen = servidor.receive(dados);
-    separaSegmento(dados,dadoslen);
+    separaSegmento(cast(char*)dados,dadoslen);
   }
 
   ushort checksum16(char* addr, int count){
@@ -98,7 +97,7 @@ class ServidorTCP {
 }
 
 void main() {
-  auto servidor = new ServidorUDP();
+  auto servidor = new ServidorTCP();
   while(true) {
     servidor.recebeFisica();
     servidor.enviaAplicacao();

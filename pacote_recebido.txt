@@ -1,1 +1,4 @@
-1110111
+GET /hello.html HTTP/1.1
+Host: localhost
+Connection: Close;
+
