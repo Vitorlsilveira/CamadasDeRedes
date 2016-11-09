@@ -138,10 +138,16 @@ class Cliente
 
 		puts "Conectado ao servidor: #{destinoIP}"
 
-		#Pergunta ao servidor qual sera o tamanho maximo do quadro
-		sock.puts("Qual o tamanho maximo do quadro(TMQ) ?\000", 0)
-		tamanhoQuadroBytes = sock.gets
-		puts "TMQ = #{tamanhoQuadroBytes}"
+		mensagem = "111011"
+
+		if mensagem == "1110111"
+			#Pergunta ao servidor qual sera o tamanho maximo do quadro
+			#sock.puts("Qual o tamanho maximo do quadro(TMQ) ?\000", 0)
+			sock.puts mensagem
+			tamanhoQuadroBytes = sock.gets
+			puts "TMQ = #{tamanhoQuadroBytes}"
+			client.puts tamanhoQuadroBytes
+		end
 
 		#Agora vamos enviar o quadro
 		sock.puts quadro;
@@ -160,4 +166,6 @@ end
 
 
 c=Cliente.new ("wlan0")
-c.executar()
+while true
+	c.executar()
+end

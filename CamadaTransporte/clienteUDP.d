@@ -13,7 +13,7 @@ class ClienteUDP {
   char[10000] dados;
   long dadoslen;
 
-  Socket listener, cliente;
+  Socket listener, cliente, socket;
 
   string segmento;
 
@@ -34,8 +34,8 @@ class ClienteUDP {
 
   }
 
-  void enviaFisica(){
-    auto socket = new Socket(AddressFamily.INET,  SocketType.STREAM);
+  void conectaFisica() {
+    socket = new Socket(AddressFamily.INET,  SocketType.STREAM);
     writeln("Aguardando cliente da camada fisica");
     while(true){
       try {
@@ -46,35 +46,32 @@ class ClienteUDP {
         continue;
       }
     }
-    //localhost:07777;localhost:06969;
+  }
 
+  void executa() {
+    conectaFisica();
+    //enviaFisica("1110111", 7);
+    recebeAplicacao();
+    enviaFisica(dados, dadoslen);
 
-    string abstracaoRede = "localhost;" ~ "localhost;";
+    //encaminha resposta cliente aplicacao
+    cliente.send(dados[0 .. dadoslen]);
+    cliente.close();
+  }
 
-    string cabecalho = to!string(portaOrigem) ~ ";" ~ to!string(portaDestino) ~ ";";
-
-    /*int teste = 65500;
-    writeln("INT = " ~ to!string(teste));
-    char[2] arr = cast(char[2])nativeToLittleEndian(cast(ushort)teste);
-    writeln("UBYTE = " ~ arr);
-    auto back = littleEndianToNative!(ushort,2)(cast(ubyte[2])arr);
-    writeln("BACK = " ~ to!string(back) ~"\n");
-*/
+  void enviaFisica(char[] dadosA, long dadoslenA){
     char[2] pOrigem = cast(char[2])nativeToLittleEndian(cast(ushort)portaOrigem);
     char[2] pDestino = cast(char[2])nativeToLittleEndian(cast(ushort)portaDestino);
-    char[2] length = cast(char[2])nativeToLittleEndian(cast(ushort)(dadoslen+8));
-    ushort check = checksum16(cast(char*)dados[0 .. dadoslen], cast(int)dadoslen);
+    char[2] length = cast(char[2])nativeToLittleEndian(cast(ushort)(dadoslenA+8));
+    ushort check = checksum16(cast(char*)dadosA[0 .. dadoslenA], cast(int)dadoslenA);
     char[2] checksum = cast(char[2])nativeToLittleEndian(check);
 
-    segmento = to!string(pOrigem)~to!string(pDestino)~to!string(length)~to!string(checksum)~to!string(dados[0 .. dadoslen]);
+    segmento = to!string(pOrigem)~to!string(pDestino)~to!string(length)~to!string(checksum)~to!string(dadosA[0 .. dadoslenA]);
     writeln(segmento);
     socket.send(segmento);
 
     //aguarda resposta
     dadoslen = socket.receive(dados);
-    //encaminha resposta cliente aplicacao
-    cliente.send(dados[0 .. dadoslen]);
-    cliente.close();
   }
 
   ushort checksum16(char* addr, int count){
@@ -103,6 +100,5 @@ void main() {
 
     auto cliente = new ClienteUDP(port, 5555);
 
-    cliente.recebeAplicacao();
-    cliente.enviaFisica();
+    cliente.executa();
 }

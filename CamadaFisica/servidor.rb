@@ -45,14 +45,18 @@ class Servidor
     loop {
       Thread.start(@server.accept) do |client|
         puts "Conectado"
-        puts client.gets
+        mensagem = client.gets
+        puts mensagem
 
-        #Aqui definimos o TMQ
-        @TMQ = gets
-        client.puts @TMQ
+        if mensagem[0..6] == "1110111"
+          #Aqui definimos o TMQ
+          @TMQ = gets
+          client.puts @TMQ
+          client.gets
+          mensagem = client.gets
+        end
 
-        client.gets
-        dados = client.gets
+        dados = mensagem
 
         puts "\n\n"
 
