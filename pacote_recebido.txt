@@ -1,2 +1,1 @@
-GET /hello.html HTTP/1.1
-
+1110111

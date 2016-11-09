@@ -67,7 +67,7 @@ class Cliente
 	def pedirTMQ()
 		#pergunta ao servidor qual sera o tamanho maximo do quadro
 		#@sock.puts("Qual o tamanho maximo do quadro(TMQ) ?\000", 0)
-		@sock.puts mensagem
+		@sock.puts "1110111"
 		tamanhoQuadroBytes = @sock.gets
 		puts "TMQ = #{tamanhoQuadroBytes}"
 		return tamanhoQuadroBytes
@@ -106,7 +106,7 @@ class Cliente
 
 		pacote = lerPacote(dados)
 		conectaServidor()
-		if @msg == "1110111"
+		if @msg.include?"1110111"
 			tmq = pedirTMQ()
 			client.puts tmq
 			dados = client.gets
