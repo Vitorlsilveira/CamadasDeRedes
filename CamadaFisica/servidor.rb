@@ -5,6 +5,15 @@ class Servidor
   def initialize(port)
     @port=port
 		@server=TCPServer.open(port)
+    @sock1=nil
+		while @sock1==nil
+      begin
+			@sock1 = TCPSocket.open("localhost",6768)
+			rescue
+				@sock1=nil
+        sleep 1
+			end
+		end
     @TMQ=1
 	end
 
@@ -19,28 +28,21 @@ class Servidor
 		return saida
 	end
 
-  def conectaTransporte(ip,porta,dados)
+  def conectaTransporte(dados)
     #tenta conectar ate conseguir
 		puts "To esperando servidor de transporte ficar disponivel!"
-		sock1 = 0
-		while sock1==0
-      begin
-			sock1 = TCPSocket.open(ip,porta)
-			rescue
-				sock1=0
-        sleep 1
-			end
-		end
-    sock1.write dados;
+
+
+    @sock1.puts dados;
     resposta = ""
     puts "Enviei para o servidor de transporte! Esperando resposta..."
-    while line = sock1.gets
+    while line = @sock1.gets
       if line == "\n"
 				break
 			end
       resposta += line
     end
-  #line=sock1.gets;
+  #line=@sock1.gets;
   #resposta+=line;
     return resposta
 	end
@@ -82,7 +84,7 @@ class Servidor
           puts "\n\n"
 
           File.write("quadro_recebido.txt", data)
-          resposta = conectaTransporte("localhost",6768,[data].pack("B*"))
+          resposta = conectaTransporte([data].pack("B*"))
           puts "\nRESPOSTA =\n"
           puts resposta
           respostaBin = resposta.unpack('B*')
