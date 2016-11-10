@@ -1,5 +1,6 @@
 import std.socket;
 import std.stdio;
+import std.random;
 import std.conv;
 import std.process: thisProcessID;
 import std.file;
@@ -16,17 +17,30 @@ class ClienteTCP {
   char[10000] bufferRemetente;
   char bitsControle;
   string mensagem;
-
   char[10000] dados;
+  char[10000] dadosR;
+  long dadoslenR;
   long dadoslen;
+
+  int portaOrigemD;
+  int portaDestinoD;
+  int numeroSequenciaD;
+  int numeroReconhecimentoD;
+  char bitsControleD;
+  int janelaD;
+  int comprimentoCabecalhoD;
+  ushort checksumD;
+  char[] mensagemD;
+
 
   Socket listener, cliente, socket;
 
   string segmento;
 
-  this (int portaOrigem, int portaDestino){
+  this (int portaOrigem, int portaDestino, int MSS){
     this.portaOrigem = portaOrigem;
     this.portaDestino = portaDestino;
+    this.MSS=MSS;
   }
 
   void recebeAplicacao(){
@@ -38,7 +52,6 @@ class ClienteTCP {
     dadoslen = cliente.receive(dados);
     writeln("QNT = " ~ to!string(dadoslen));
     writeln(dados[0 .. dadoslen]);
-
   }
 
   void conectaFisica() {
@@ -67,9 +80,49 @@ class ClienteTCP {
   }
 
   void enviaFisica(char[] dadosA, long dadoslenA){
-    criaSegmento(portaOrigem,portaDestino,4,18,numeroSequencia,0,cast(char)'A',cast(char*)dadosA,dadoslenA);
-    writeln(segmento);
-    socket.send(segmento);
+    int numSegmentos=cast(int)(dadoslenA/MSS);
+    long restoDivisao= cast(long)(dadoslenA % MSS);
+    numeroSequencia=uniform(0,100);
+    int fimParcial=MSS;
+    int aux=0;
+    int i=0;
+    janela=numSegmentos;
+    writeln(numSegmentos);
+    if(numSegmentos>0){
+        while(i<numSegmentos-1){
+          numeroSequencia=numeroSequencia+1;
+          criaSegmento(portaOrigem,portaDestino,janela,18,numeroSequencia,numeroReconhecimento,cast(char)'A',cast(char*)dadosA[aux..fimParcial],MSS);
+          writeln(segmento);
+          socket.send(segmento);
+          aux=fimParcial;
+          fimParcial=fimParcial+MSS;
+          janela=janela-1;
+          i=i+1;
+          dadoslenR=socket.receive(dadosR);
+          separaSegmento(cast(char*)dadosR,dadoslenR);
+          writeln("Recebi já");
+          numeroReconhecimento=numeroSequenciaD+1;
+        }
+        if(restoDivisao==0){
+          criaSegmento(portaOrigem,portaDestino,janelaD,18,++numeroSequencia,numeroReconhecimento,cast(char)'A',cast(char*)dadosA[aux..fimParcial],MSS);
+          writeln(segmento);
+          socket.send(segmento);
+          dadoslenR=socket.receive(dadosR);
+          separaSegmento(cast(char*)dadosR,dadoslenR);
+          numeroReconhecimento=numeroSequenciaD+1;
+        }
+        else{
+          criaSegmento(portaOrigem,portaDestino,janelaD,18,++numeroSequencia,numeroReconhecimento,cast(char)'A',cast(char*)dadosA[aux..restoDivisao],restoDivisao);
+          writeln(segmento);
+          socket.send(segmento);
+          dadoslenR=socket.receive(dadosR);
+          separaSegmento(cast(char*)dadosR,dadoslenR);
+          numeroReconhecimento=numeroSequenciaD+1;
+        }
+        aux=0;
+        fimParcial=MSS;
+        i=0;
+    }
 
     //aguarda resposta
     dadoslen = socket.receive(dados);
@@ -84,7 +137,29 @@ class ClienteTCP {
     char[2] pComprimentoCabecalho = cast(char[2])nativeToLittleEndian(cast(ushort)(18));
     ushort check = checksum16(cast(char*)dados[0 .. dadoslen], cast(int)dadoslen);
     char[2] checksum = cast(char[2])nativeToLittleEndian(check);
-    segmento = to!string(pOrigem)~to!string(pDestino)~to!string(pNumeroSequencia)~to!string(pNumeroReconhecimento)~to!string(bitsControle)~to!string(pJanela)~to!string(pComprimentoCabecalho)~to!string(checksum)~to!string(dados[0..dadoslen]);
+    segmento = to!string(pOrigem)~to!string(pDestino)~to!string(pNumeroSequencia)~to!string(pNumeroReconhecimento)~to!string(bitsControle)~to!string(pJanela)~to!string(pComprimentoCabecalho)~to!string(checksum)~to!string(dados[0..dadoslen]~"\n");
+  }
+
+  void separaSegmento(char *dados,long tam){
+    portaOrigemD = cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[0..2]);
+    writeln("Porta origem:"~to!string(portaOrigemD));
+    portaDestinoD = cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[2..4]);
+    writeln("Porta destino:"~to!string(portaDestinoD));
+    numeroSequenciaD=cast(int)littleEndianToNative!(uint,4)(cast(ubyte[4])dados[4..8]);
+    writeln("sequencia:"~to!string(numeroSequenciaD));
+    numeroReconhecimentoD=cast(int)littleEndianToNative!(uint,4)(cast(ubyte[4])dados[8..12]);
+    writeln("reconhecimento:"~to!string(numeroReconhecimentoD));
+    bitsControleD=cast(char)littleEndianToNative!(byte,1)(cast(ubyte[1])dados[12..13]);
+    writeln("bits controle:"~to!string(bitsControleD));
+    janelaD=cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[13..15]);
+    writeln("janela:"~to!string(janelaD));
+    comprimentoCabecalhoD=cast(int)littleEndianToNative!(byte,1)(cast(ubyte[1])dados[15..16]);
+    writeln("comprimento cabecalho:"~to!string(comprimentoCabecalhoD));
+    checksumD=cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[16..18]);
+    if(tam>=19){
+      mensagemD=dados[19..tam];
+    }
+
   }
 
   ushort checksum16(char* addr, int count){
@@ -111,7 +186,7 @@ class ClienteTCP {
 void main() {
     const port = thisProcessID;
 
-    auto cliente = new ClienteTCP(port, 5555);
+    auto cliente = new ClienteTCP(port, 5555,10);
 
     cliente.executa();
 }

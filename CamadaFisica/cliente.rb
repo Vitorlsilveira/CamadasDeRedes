@@ -103,9 +103,8 @@ class Cliente
 		# espera pela conexão do cliente da camada de aplicação
 		client = @server.accept
 
-		dados = client.gets
-		dados += client.gets
-		dados += client.gets
+		dados = client.gets;
+		puts dados;
 
 		pacote = lerPacote(dados)
 		conectaServidor()

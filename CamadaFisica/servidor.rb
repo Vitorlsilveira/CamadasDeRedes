@@ -34,10 +34,12 @@ class Servidor
     sock1.write dados;
     resposta = ""
     puts "Enviei para o servidor da aplicacao! Esperando resposta..."
-    while line = sock1.gets
-      resposta += line
-    end
-    return resposta
+  #  while line = sock1.gets
+  #    resposta += line
+  #  end
+  line=sock1.gets;
+  resposta+=line;
+  return resposta
 	end
 
   def executar
