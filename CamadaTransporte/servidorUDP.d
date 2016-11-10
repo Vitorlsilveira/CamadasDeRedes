@@ -39,7 +39,7 @@ class ServidorUDP {
     //recebe resposta
     dadoslen = socket.receive(dados);
     //encaminha resposta pra fisica
-    servidor.send(dados[0 .. dadoslen-1]);
+    servidor.send(dados[0 .. dadoslen]);
     servidor.close();
   }
 

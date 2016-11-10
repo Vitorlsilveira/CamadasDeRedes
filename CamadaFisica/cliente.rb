@@ -99,87 +99,95 @@ class Cliente
 
 		#Lendo dados da camada de cima
 		dados = ""
-		puts "Ouvindo do cliente da aplicacao na porta #{@port}"
+		puts "Ouvindo do cliente de transporte na porta #{@port}"
 		# espera pela conexão do cliente da camada de aplicação
 		client = @server.accept
+		while true
+			puts "Aguardando pacote"
+			dados = ""
+			while line = client.gets
+				if line == "\n"
+					break
+				end
+				dados += line
+				puts dados
+			end
+			puts dados;
 
-		dados = client.gets;
-		puts dados;
-
-		pacote = lerPacote(dados)
-		conectaServidor()
-		if @msg.include?"1110111"
-			tmq = pedirTMQ()
-			client.puts tmq
-			dados = client.gets
 			pacote = lerPacote(dados)
+			conectaServidor()
+			if @msg.include?"1110111"
+				tmq = pedirTMQ()
+				client.puts tmq
+				dados = client.gets
+				pacote = lerPacote(dados)
+			end
+
+			puts "Ip de origem: #{@origemIP}"
+			puts "Ip do destinatario: #{@destinoIP}"
+			puts "Porta origem: #{@origemPorta}"
+			puts "Porta destino: #{@destinoPorta}"
+			puts "Dados: \n#{@msg}\n"
+
+			#pega o mac do destino
+			macDestino = get_mac_address(@destinoIP)
+			#pega o mac do remetente de acordo com a interface usada
+			macOrigem = getMyMacAddress
+
+			puts "Mac do destinatario: #{macDestino}"
+			puts "Mac do remetente: #{macOrigem}"
+
+	   	#Formata os MAC address retirando o dois pontos
+			macDestino = macDestino.gsub(":","").delete("\n")
+			macOrigem = macOrigem.gsub(":","").delete("\n")
+
+			#transforma os mac para binario
+			macDestinoBinario=converteHexToBin(macDestino)
+			macOrigemBinario=converteHexToBin(macOrigem)
+
+			puts "Mac do destinatario em binario: #{macDestinoBinario}"
+			puts "Mac do remetente em binario: #{macOrigemBinario}"
+
+	   	#usado para sincronizar o emissor ao clock do remetente
+			preambulo = "1010101010101010101010101010101010101010101010101010101010101011"
+	   	#tipo indica o protocolo da camada superior e deve ser formatado para binario
+			type=  converteHexToBin("0800")
+	    #utilizado para deteccao de erros
+			puts "\nCRC HEX ==  #{Digest::CRC32.hexdigest("#{pacote}")}\n"
+			crc = converteHexToBin(Digest::CRC32.hexdigest("#{pacote}"))
+
+			puts "Frame ethernet:\n"
+			puts "#{preambulo}#{macDestinoBinario}#{macOrigemBinario}#{type}#{pacote}#{crc}"
+			puts "Tamanho do preambulo : #{preambulo.size.to_f/8}"
+			puts "Tamanho do macDestinoBinario : #{macDestinoBinario.size.to_f/8}"
+			puts "Tamanho do macOrigemBinario : #{macOrigemBinario.size.to_f/8}"
+			puts "Tamanho do type : #{type.size.to_f/8}"
+			puts "Tamanho do pacote : #{pacote.size.to_f/8}"
+			puts "Tamanho do crc : #{crc.size.to_f/8}"
+
+			puts "CRC = #{crc}"
+
+			#pdu da camada fisica
+			quadro = preambulo+macDestinoBinario+macOrigemBinario+type+pacote+crc
+			puts "\nTamanho do quadro : #{quadro.size.to_f/8}"
+
+			File.write("quadro.txt", quadro)
+
+			#Agora vamos enviar o quadro
+			@sock.puts quadro;
+
+			puts "Recebendo resposta do servidor .. .. .. .. .. \n\n"
+			resp = @sock.gets
+			puts "Enviando para transporte"
+
+			puts [resp].pack('B*')
+			client.puts [resp].pack('B*')
 		end
-
-		puts "Ip de origem: #{@origemIP}"
-		puts "Ip do destinatario: #{@destinoIP}"
-		puts "Porta origem: #{@origemPorta}"
-		puts "Porta destino: #{@destinoPorta}"
-		puts "Dados: \n#{@msg}\n"
-
-		#pega o mac do destino
-		macDestino = get_mac_address(@destinoIP)
-		#pega o mac do remetente de acordo com a interface usada
-		macOrigem = getMyMacAddress
-
-		puts "Mac do destinatario: #{macDestino}"
-		puts "Mac do remetente: #{macOrigem}"
-
-   	#Formata os MAC address retirando o dois pontos
-		macDestino = macDestino.gsub(":","").delete("\n")
-		macOrigem = macOrigem.gsub(":","").delete("\n")
-
-		#transforma os mac para binario
-		macDestinoBinario=converteHexToBin(macDestino)
-		macOrigemBinario=converteHexToBin(macOrigem)
-
-		puts "Mac do destinatario em binario: #{macDestinoBinario}"
-		puts "Mac do remetente em binario: #{macOrigemBinario}"
-
-   	#usado para sincronizar o emissor ao clock do remetente
-		preambulo = "1010101010101010101010101010101010101010101010101010101010101011"
-   	#tipo indica o protocolo da camada superior e deve ser formatado para binario
-		type=  converteHexToBin("0800")
-    #utilizado para deteccao de erros
-		puts "\nCRC HEX ==  #{Digest::CRC32.hexdigest("#{pacote}")}\n"
-		crc = converteHexToBin(Digest::CRC32.hexdigest("#{pacote}"))
-
-		puts "Frame ethernet:\n"
-		puts "#{preambulo}#{macDestinoBinario}#{macOrigemBinario}#{type}#{pacote}#{crc}"
-		puts "Tamanho do preambulo : #{preambulo.size.to_f/8}"
-		puts "Tamanho do macDestinoBinario : #{macDestinoBinario.size.to_f/8}"
-		puts "Tamanho do macOrigemBinario : #{macOrigemBinario.size.to_f/8}"
-		puts "Tamanho do type : #{type.size.to_f/8}"
-		puts "Tamanho do pacote : #{pacote.size.to_f/8}"
-		puts "Tamanho do crc : #{crc.size.to_f/8}"
-
-		puts "CRC = #{crc}"
-
-		#pdu da camada fisica
-		quadro = preambulo+macDestinoBinario+macOrigemBinario+type+pacote+crc
-		puts "\nTamanho do quadro : #{quadro.size.to_f/8}"
-
-		File.write("quadro.txt", quadro)
-
-		#Agora vamos enviar o quadro
-		@sock.puts quadro;
-
-		puts "Recebendo resposta do servidor .. .. .. .. .. \n\n"
-		resp = @sock.gets
-		puts "Enviando para Aplicacao"
-
-		puts [resp].pack('B*')
-		client.puts [resp].pack('B*')
+		client.close
 	end
 
 end
 
 
 c=Cliente.new ("wlan0")
-while true
-	c.executar()
-end
+c.executar()

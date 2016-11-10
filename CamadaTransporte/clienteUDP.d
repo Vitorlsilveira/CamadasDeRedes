@@ -66,7 +66,7 @@ class ClienteUDP {
     ushort check = checksum16(cast(char*)dadosA[0 .. dadoslenA], cast(int)dadoslenA);
     char[2] checksum = cast(char[2])nativeToLittleEndian(check);
 
-    segmento = to!string(pOrigem)~to!string(pDestino)~to!string(length)~to!string(checksum)~to!string(dadosA[0 .. dadoslenA]);
+    segmento = to!string(pOrigem)~to!string(pDestino)~to!string(length)~to!string(checksum)~to!string(dadosA[0 .. dadoslenA]~"\n");
     writeln(segmento);
     socket.send(segmento);
 

@@ -61,7 +61,7 @@ class ServidorTCP {
     //recebe resposta
     dadoslen = socket.receive(dados);
     //encaminha resposta pra fisica
-    servidor.send(dados[0 .. dadoslen-1]);
+    servidor.send(dados[0 .. dadoslen]);
     servidor.close();
   }
 
@@ -74,7 +74,7 @@ class ServidorTCP {
     char[2] pComprimentoCabecalho = cast(char[2])nativeToLittleEndian(cast(ushort)(18));
     ushort check = checksum16(cast(char*)dados[0 .. dadoslen], cast(int)dadoslen);
     char[2] checksum = cast(char[2])nativeToLittleEndian(check);
-    segmento = to!string(pOrigem)~to!string(pDestino)~to!string(pNumeroSequencia)~to!string(pNumeroReconhecimento)~to!string(bitsControle)~to!string(pJanela)~to!string(pComprimentoCabecalho)~to!string(checksum)~to!string(dados[0..dadoslen]~"\n");
+    segmento = to!string(pOrigem)~to!string(pDestino)~to!string(pNumeroSequencia)~to!string(pNumeroReconhecimento)~to!string(bitsControle)~to!string(pJanela)~to!string(pComprimentoCabecalho)~to!string(checksum)~to!string(dados[0..dadoslen]~"\n\n");
   }
 
   void separaSegmento(char *dados,long tam){
