@@ -16,11 +16,12 @@ class ClienteTCP {
   int comprimentoCabecalho;
   char[10000] bufferRemetente;
   char bitsControle;
-  string mensagem;
+  char[] mensagem;
   char[10000] dados;
   char[10000] dadosR;
   long dadoslenR;
   long dadoslen;
+  string bufferDestinatario;
 
   int portaOrigemD;
   int portaDestinoD;
@@ -31,7 +32,7 @@ class ClienteTCP {
   int comprimentoCabecalhoD;
   ushort checksumD;
   char[] mensagemD;
-
+  string mensagemE;
 
   Socket listener, cliente, socket;
 
@@ -73,9 +74,10 @@ class ClienteTCP {
   //  enviaFisica(cast(char[])"1110111", 7);
     recebeAplicacao();
     enviaFisica(dados, dadoslen);
-
+    recebeResposta();
     //encaminha resposta cliente aplicacao
-    cliente.send(dados[0 .. dadoslen]);
+    //cliente.send(dados[0 .. dadoslen]);
+    cliente.send(mensagem);
     cliente.close();
   }
 
@@ -126,7 +128,34 @@ class ClienteTCP {
     }
 
     //aguarda resposta
-    dadoslen = socket.receive(dados);
+    //dadoslen = socket.receive(dados);
+
+  }
+
+  void recebeResposta(){
+    writeln("aceitou");
+    int count=0;
+    janelaD=1;
+    numeroSequencia=uniform(0,100);
+    while(janelaD < 99){
+      writeln("entrei no loop");
+      count++;
+      dadoslenR = cliente.receive(dadosR);
+      writeln("recebeu segmento");
+      writeln(dadosR[0..dadoslenR]);
+      separaSegmento(cast(char*)dadosR,dadoslenR);
+      bufferDestinatario=bufferDestinatario~mensagemE;
+      writeln("buffer do destinatario atual:");
+      writeln(bufferDestinatario);
+      portaOrigem=portaDestinoD;
+      portaDestino=portaOrigemD;
+      numeroSequencia=numeroSequencia+1;
+      numeroReconhecimento=numeroSequenciaD+1;
+      criaSegmento(portaOrigem,portaDestino,janelaD,18,numeroSequencia,numeroReconhecimento,cast(char)'A',cast(char*)dadosR[0..0],0);
+      cliente.send(segmento);
+    }
+    mensagem=cast(char[])bufferDestinatario;
+    writeln("mensagem");
   }
 
   void criaSegmento(int portaOrigem,int portaDestino,int janela,int comprimentoCabecalho,int numeroSequencia,int numeroReconhecimento,char bitsControle,char *dados,long dadoslen){
@@ -138,7 +167,7 @@ class ClienteTCP {
     char[2] pComprimentoCabecalho = cast(char[2])nativeToLittleEndian(cast(ushort)(comprimentoCabecalho));
     ushort check = checksum16(cast(char*)dados[0 .. dadoslen], cast(int)dadoslen);
     char[2] checksum = cast(char[2])nativeToLittleEndian(check);
-    segmento = to!string(pOrigem)~to!string(pDestino)~to!string(pNumeroSequencia)~to!string(pNumeroReconhecimento)~to!string(bitsControle)~to!string(pJanela)~to!string(pComprimentoCabecalho)~to!string(checksum)~to!string(dados[0..dadoslen]~"\n\n");
+    segmento = to!string(pOrigem)~to!string(pDestino)~to!string(pNumeroSequencia)~to!string(pNumeroReconhecimento)~to!string(bitsControle)~to!string(pJanela)~to!string(pComprimentoCabecalho)~to!string(checksum)~to!string(dados[0..dadoslen]~"\n\r\n");
     writeln(segmento);
   }
 

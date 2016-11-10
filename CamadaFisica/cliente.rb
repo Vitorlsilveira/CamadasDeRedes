@@ -106,7 +106,7 @@ class Cliente
 			puts "Aguardando pacote"
 			dados = ""
 			while line = client.gets
-				if line == "\n"
+				if line == "\r\n"
 					break
 				end
 				dados += line

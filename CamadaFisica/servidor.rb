@@ -30,20 +30,16 @@ class Servidor
 
   def conectaTransporte(dados)
     #tenta conectar ate conseguir
-		puts "To esperando servidor de transporte ficar disponivel!"
-
-
+		#puts "To esperando servidor de transporte ficar disponivel!"
     @sock1.puts dados;
     resposta = ""
     puts "Enviei para o servidor de transporte! Esperando resposta..."
     while line = @sock1.gets
-      if line == "\n"
+      if line == "\r\n"
 				break
 			end
       resposta += line
     end
-  #line=@sock1.gets;
-  #resposta+=line;
     return resposta
 	end
 
@@ -51,8 +47,8 @@ class Servidor
     puts "Listening to port #{@port}"
     loop {
       Thread.start(@server.accept) do |client|
+        puts "Conectado"
         while true
-          puts "Conectado"
           mensagem = client.gets
           puts mensagem
 

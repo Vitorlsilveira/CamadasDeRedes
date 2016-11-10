@@ -9,12 +9,12 @@ import std.bitmanip;
 
 
 class ServidorTCP {
-  int portaOrigem;
-  int portaDestino;
+  int portaOrigem, portaOrigemR;
+  int portaDestino, portaDestinoR;
   int MSS;
-  int janela;
-  int numeroSequencia;
-  int numeroReconhecimento;
+  int janela, janelaR;
+  int numeroSequencia, numeroSequenciaR;
+  int numeroReconhecimento, numeroReconhecimentoR;
   int comprimentoCabecalho;
   string bufferDestinatario;
   char bitsControle;
@@ -28,7 +28,7 @@ class ServidorTCP {
 
   int portaOrigemD;
   int portaDestinoD;
-  int numeroSequenciaD;
+  int numeroSequenciaD, numeroSequenciaDR;
   int numeroReconhecimentoD;
   char bitsControleD;
   int janelaD;
@@ -38,13 +38,14 @@ class ServidorTCP {
   char[] mensagemD;
   string mensagemE;
 
-  Socket listener, servidor;
+  Socket listener, servidor, socket;
 
-  this(){
+  this(int MSS){
     listener = new Socket(AddressFamily.INET, SocketType.STREAM);
     listener.bind(new InternetAddress("localhost", 6768));
     listener.listen(10);
     bufferDestinatario="";
+    this.MSS=MSS;
   }
 
   void criaSegmento(int portaOrigem,int portaDestino,int janela,int comprimentoCabecalho,int numeroSequencia,int numeroReconhecimento,char bitsControle,char *dados,long dadoslen){
@@ -56,7 +57,7 @@ class ServidorTCP {
     char[2] pComprimentoCabecalho = cast(char[2])nativeToLittleEndian(cast(ushort)(comprimentoCabecalho));
     ushort check = checksum16(cast(char*)dados[0 .. dadoslen], cast(int)dadoslen);
     char[2] checksum = cast(char[2])nativeToLittleEndian(check);
-    segmento = to!string(pOrigem)~to!string(pDestino)~to!string(pNumeroSequencia)~to!string(pNumeroReconhecimento)~to!string(bitsControle)~to!string(pJanela)~to!string(pComprimentoCabecalho)~to!string(checksum)~to!string(dados[0..dadoslen]~"\n\n");
+    segmento = to!string(pOrigem)~to!string(pDestino)~to!string(pNumeroSequencia)~to!string(pNumeroReconhecimento)~to!string(bitsControle)~to!string(pJanela)~to!string(pComprimentoCabecalho)~to!string(checksum)~to!string(dados[0..dadoslen]~"\n\r\n");
     writeln("Segmento: ");
     writeln(segmento);
   }
@@ -94,10 +95,7 @@ class ServidorTCP {
     int count=0;
     janelaD=1;
     numeroSequencia=uniform(0,100);
-    while(1){
-      if(janelaD==99){
-        break;
-      }
+    while(janelaD < 99){
       writeln("entrei no loop");
       count++;
       dadoslenR = servidor.receive(dadosR);
@@ -117,7 +115,7 @@ class ServidorTCP {
     mensagem=cast(char[])bufferDestinatario;
     writeln("mensagem");
 
-    auto socket = new Socket(AddressFamily.INET,  SocketType.STREAM);
+    socket = new Socket(AddressFamily.INET,  SocketType.STREAM);
     while(true){
       try {
         socket.connect(new InternetAddress("localhost", cast(ushort)portaDestinoD));
@@ -131,12 +129,59 @@ class ServidorTCP {
     socket.send(mensagem);
     //recebe resposta
     dadoslen = socket.receive(dados);
-    writeln("dados recebidos da aplicacao");
+    socket.close();
+    writeln("\ndados recebidos da aplicacao");
     writeln(dados[0..dadoslen]);
     //encaminha resposta pra fisica
-    servidor.send(dados[0 .. dadoslen]);
+    //servidor.send(dados[0 .. dadoslen]);
+    enviaResposta(dados, dadoslen);
     servidor.close();
+  }
 
+  void enviaResposta(char[] dadosA, long dadoslenA){
+    int numSegmentos=cast(int)(dadoslenA/MSS);
+    long restoDivisao= cast(long)(dadoslenA % MSS);
+    numeroSequenciaR=uniform(0,100);
+    int fimParcial=MSS;
+    int aux=0;
+    int i=0;
+    janelaR=numSegmentos;
+    writeln(numSegmentos);
+    if(numSegmentos>0){
+        while(i<numSegmentos-1){
+          janela=janela-1;
+          criaSegmento(portaOrigemR,portaDestinoR,janela,18,numeroSequenciaR,numeroReconhecimentoR,cast(char)'A',cast(char*)dadosA[aux..fimParcial],MSS);
+          socket.send(segmento);
+          writeln("ENVIOUUUU");
+          aux=fimParcial;
+          fimParcial=fimParcial+MSS;
+          i=i+1;
+          dadoslenR=socket.receive(dadosR);
+          separaSegmento(cast(char*)dadosR,dadoslenR);
+          writeln("Recebi já");
+          numeroReconhecimentoR=numeroSequenciaDR+1;
+          numeroSequenciaR=numeroSequenciaR+1;
+        }
+        if(restoDivisao==0){
+          criaSegmento(portaOrigemR,portaDestinoR,99,18,numeroSequenciaR,numeroReconhecimentoR,cast(char)'A',cast(char*)dadosA[aux..fimParcial],MSS);
+          socket.send(segmento);
+          dadoslenR=socket.receive(dadosR);
+          separaSegmento(cast(char*)dadosR,dadoslenR);
+          numeroReconhecimentoR=numeroSequenciaDR+1;
+          numeroSequenciaR=numeroSequenciaR+1;
+        } else {
+          janela=janela-1;
+          criaSegmento(portaOrigemR,portaDestinoR,99,18,numeroSequenciaR,numeroReconhecimentoR,cast(char)'A',cast(char*)dadosA[aux..aux+restoDivisao],restoDivisao);
+          socket.send(segmento);
+          dadoslenR=socket.receive(dadosR);
+          separaSegmento(cast(char*)dadosR,dadoslenR);
+          numeroReconhecimentoR=numeroSequenciaDR+1;
+          numeroSequenciaR=numeroSequenciaR+1;
+        }
+        aux=0;
+        fimParcial=MSS;
+        i=0;
+    }
   }
 
   ushort checksum16(char* addr, int count){
@@ -161,7 +206,7 @@ class ServidorTCP {
 }
 
 void main() {
-  auto servidor = new ServidorTCP();
+  auto servidor = new ServidorTCP(10);
   while(true) {
     servidor.recebeFisica();
   }
