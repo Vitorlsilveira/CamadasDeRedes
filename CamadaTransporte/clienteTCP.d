@@ -90,35 +90,35 @@ class ClienteTCP {
     writeln(numSegmentos);
     if(numSegmentos>0){
         while(i<numSegmentos-1){
-          numeroSequencia=numeroSequencia+1;
+          janela=janela-1;
           criaSegmento(portaOrigem,portaDestino,janela,18,numeroSequencia,numeroReconhecimento,cast(char)'A',cast(char*)dadosA[aux..fimParcial],MSS);
-          writeln(segmento);
           socket.send(segmento);
           writeln("ENVIOUUUU");
           aux=fimParcial;
           fimParcial=fimParcial+MSS;
-          janela=janela-1;
           i=i+1;
           dadoslenR=socket.receive(dadosR);
           separaSegmento(cast(char*)dadosR,dadoslenR);
           writeln("Recebi já");
           numeroReconhecimento=numeroSequenciaD+1;
+          numeroSequencia=numeroSequencia+1;
         }
         if(restoDivisao==0){
-          criaSegmento(portaOrigem,portaDestino,janelaD,18,++numeroSequencia,numeroReconhecimento,cast(char)'A',cast(char*)dadosA[aux..fimParcial],MSS);
-          writeln(segmento);
+          criaSegmento(portaOrigem,portaDestino,99,18,numeroSequencia,numeroReconhecimento,cast(char)'A',cast(char*)dadosA[aux..fimParcial],MSS);
           socket.send(segmento);
           dadoslenR=socket.receive(dadosR);
           separaSegmento(cast(char*)dadosR,dadoslenR);
           numeroReconhecimento=numeroSequenciaD+1;
+          numeroSequencia=numeroSequencia+1;
         }
         else{
-          criaSegmento(portaOrigem,portaDestino,janelaD,18,++numeroSequencia,numeroReconhecimento,cast(char)'A',cast(char*)dadosA[aux..restoDivisao],restoDivisao);
-          writeln(segmento);
+          janela=janela-1;
+          criaSegmento(portaOrigem,portaDestino,99,18,numeroSequencia,numeroReconhecimento,cast(char)'A',cast(char*)dadosA[aux..restoDivisao],restoDivisao);
           socket.send(segmento);
           dadoslenR=socket.receive(dadosR);
           separaSegmento(cast(char*)dadosR,dadoslenR);
           numeroReconhecimento=numeroSequenciaD+1;
+          numeroSequencia=numeroSequencia+1;
         }
         aux=0;
         fimParcial=MSS;
@@ -134,11 +134,12 @@ class ClienteTCP {
     char[2] pDestino = cast(char[2])nativeToLittleEndian(cast(ushort)portaDestino);
     char[2] pJanela = cast(char[2])nativeToLittleEndian(cast(ushort)janela);
     char[4] pNumeroSequencia = cast(char[4])nativeToLittleEndian(cast(uint)numeroSequencia);
-    char[4] pNumeroReconhecimento = cast(char[4])nativeToLittleEndian(cast(uint)(0));
-    char[2] pComprimentoCabecalho = cast(char[2])nativeToLittleEndian(cast(ushort)(18));
+    char[4] pNumeroReconhecimento = cast(char[4])nativeToLittleEndian(cast(uint)(numeroReconhecimento));
+    char[2] pComprimentoCabecalho = cast(char[2])nativeToLittleEndian(cast(ushort)(comprimentoCabecalho));
     ushort check = checksum16(cast(char*)dados[0 .. dadoslen], cast(int)dadoslen);
     char[2] checksum = cast(char[2])nativeToLittleEndian(check);
     segmento = to!string(pOrigem)~to!string(pDestino)~to!string(pNumeroSequencia)~to!string(pNumeroReconhecimento)~to!string(bitsControle)~to!string(pJanela)~to!string(pComprimentoCabecalho)~to!string(checksum)~to!string(dados[0..dadoslen]~"\n\n");
+    writeln(segmento);
   }
 
   void separaSegmento(char *dados,long tam){
