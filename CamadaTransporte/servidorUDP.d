@@ -38,8 +38,11 @@ class ServidorUDP {
     socket.send(mensagem);
     //recebe resposta
     dadoslen = socket.receive(dados);
+    readln();
+    writeln("recebi da aplicação:");
+    writeln(dados[0..dadoslen]);
     //encaminha resposta pra fisica
-    servidor.send(dados[0 .. dadoslen]);
+    servidor.send(to!string(dados[0 .. dadoslen])~"\n\r\n\r\n");
     servidor.close();
   }
 

@@ -53,7 +53,6 @@ class ClienteUDP {
   //  enviaFisica(cast(char[])"1110111", 7);
     recebeAplicacao();
     enviaFisica(dados, dadoslen);
-
     //encaminha resposta cliente aplicacao
     cliente.send(dados[0 .. dadoslen]);
     cliente.close();
@@ -66,7 +65,7 @@ class ClienteUDP {
     ushort check = checksum16(cast(char*)dadosA[0 .. dadoslenA], cast(int)dadoslenA);
     char[2] checksum = cast(char[2])nativeToLittleEndian(check);
 
-    segmento = to!string(pOrigem)~to!string(pDestino)~to!string(length)~to!string(checksum)~to!string(dadosA[0 .. dadoslenA]~"\n");
+    segmento = to!string(pOrigem)~to!string(pDestino)~to!string(length)~to!string(checksum)~to!string(dadosA[0 .. dadoslenA]~"\n\r\n\r\n");
     writeln(segmento);
     socket.send(segmento);
 

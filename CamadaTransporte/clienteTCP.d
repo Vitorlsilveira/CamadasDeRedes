@@ -159,6 +159,8 @@ class ClienteTCP {
       if(janelaD==100){
         /*começa fechar conexão*/
         mensagem=cast(char[])bufferRemetente;
+        criaSegmento(portaOrigem,portaDestino,janelaD,18,numeroSequencia,numeroReconhecimento,cast(char)'F',cast(char*)dadosR[0..0],0);
+        socket.send(segmento);
         writeln("mensagem");
         writeln(mensagem);
 
@@ -166,8 +168,7 @@ class ClienteTCP {
       }
     }
     /*Continua fechamento de conexão*/
-    criaSegmento(portaOrigem,portaDestino,janelaD,18,numeroSequencia,numeroReconhecimento,cast(char)'F',cast(char*)dadosR[0..0],0);
-    socket.send(segmento);
+
     dadoslenR = socket.receive(dadosR);
     separaSegmento(cast(char*)dadosR,dadoslenR);
     numeroSequencia=numeroSequencia+1;
@@ -180,7 +181,7 @@ class ClienteTCP {
     numeroReconhecimento=numeroSequenciaD+1;
     criaSegmento(portaOrigem,portaDestino,janelaD,18,numeroSequencia,numeroReconhecimento,cast(char)'A',cast(char*)dadosR[0..0],0);
     socket.send(segmento);
-    
+
 
   }
 
@@ -242,10 +243,17 @@ class ClienteTCP {
      return checksum;
  }
 }
-
+/*
+T= to mandando ultimo segmento
+A= ACK
+S= SYN
+F= FIN
+0T0A00SF
+00000010
+0001
+*/
 void main() {
     const port = thisProcessID;
-
     auto cliente = new ClienteTCP(port, 5555,10);
 
     cliente.executa();
