@@ -40,7 +40,7 @@ class ServidorTCP {
   ushort checksumD,checksumDR;
   char[] mensagemD,mensagemDR;
   string mensagemE,mensagemER;
-
+  bool conectado = false;
   Socket listener, servidor, socket;
 
   this(int MSS){
@@ -181,12 +181,16 @@ class ServidorTCP {
   }
 
   void recebeFisica(){
-    writeln("esperando conexao");
-    servidor = listener.accept();
-    writeln("aceitou");
+    writeln("Esperando conexao com camada fisica");
+    if(!conectado){
+      servidor = listener.accept();
+      conectado = true;
+    }
     int count=0;
     janelaD=1;
     numeroSequencia=uniform(0,100);
+
+    writeln("Estabelecimento de conexao (Handshake)");
     /*Estabelecimento de conexão de 3 vias - handshake*/
     dadoslenR = servidor.receive(dadosR);
     separaSegmento(cast(char*)dadosR,dadoslenR);
@@ -197,31 +201,30 @@ class ServidorTCP {
     servidor.send(segmento);
 
     while(1){
-      writeln("entrei no loop");
       count++;
       dadoslenR = servidor.receive(dadosR);
-      writeln("recebeu segmento");
       writeln(dadosR[0..dadoslenR]);
       separaSegmento(cast(char*)dadosR,dadoslenR);
-      bufferDestinatario=bufferDestinatario~mensagemE;
-      writeln("buffer do destinatario atual:");
-      writeln(bufferDestinatario);
+      writeln("Recebi segmento: " ~ to!string(numeroSequenciaD));
+      bufferDestinatario = bufferDestinatario ~ mensagemE;
       portaOrigem=portaDestinoD;
       portaDestino=portaOrigemD;
       numeroSequencia=numeroSequencia+1;
       numeroReconhecimento=numeroSequenciaD+MSS;
       if(vetorControle[1]=='0'){
-      codifica("00010000");
-      criaSegmento(portaOrigem,portaDestino,janela,18,numeroSequencia,numeroReconhecimento,bitsControle,cast(char*)dadosR[0..0],0);
-      servidor.send(segmento);
-      continue;
+        codifica("00010000");
+        writeln("Enviei confirmacao: " ~ to!string(numeroReconhecimentoD));
+        criaSegmento(portaOrigem,portaDestino,janela,18,numeroSequencia,numeroReconhecimento,bitsControle,cast(char*)dadosR[0..0],0);
+        servidor.send(segmento);
+        continue;
       }
       else{
         break;
       }
     }
     mensagem=cast(char[])bufferDestinatario;
-    writeln("mensagem");
+    writeln("Buffer destinatario final: ");
+    writeln(mensagem);
 
     socket = new Socket(AddressFamily.INET,  SocketType.STREAM);
     while(true){
@@ -232,13 +235,13 @@ class ServidorTCP {
         continue;
       }
     }
-    writeln("\nEnviando para Aplicacao \n" ~ mensagem[0..tamanhoBufferDestinatario-1]);
+    writeln("\nEnviando para Aplicacao \n" ~ mensagem);
     // Envia a requisicao pra aplicacao
-    socket.send(mensagem[0..tamanhoBufferDestinatario-1]);
+    socket.send(mensagem);
     //recebe resposta
     dadoslen = socket.receive(dados);
     socket.close();
-    writeln("\ndados recebidos da aplicacao");
+    writeln("\nDados recebidos da aplicacao: ");
     writeln(dados[0..dadoslen]);
     //encaminha resposta pra fisica
     long dadoslenA=dadoslen;
@@ -254,42 +257,37 @@ class ServidorTCP {
     if(numSegmentos>0){
         while(i<numSegmentos){
           codifica("00010000");
+          writeln("Enviei segmento: " ~ to!string(numeroSequenciaR));
           criaSegmento(portaOrigem,portaDestino,janelaR,18,numeroSequenciaR,numeroReconhecimentoR,bitsControle,cast(char*)dadosA[aux..fimParcial],MSS);
           servidor.send(segmento);
-          writeln("ENVIOUUUU");
           aux=fimParcial;
           fimParcial=fimParcial+MSS;
           i=i+1;
           dadoslenR=servidor.receive(dadosR);
           separaSegmento2(cast(char*)dadosR,dadoslenR);
-          writeln("Recebi já");
+          writeln("Recebi confimacao: "~to!string(numeroReconhecimentoDR));
           numeroReconhecimentoR=numeroSequenciaDR+1;
           numeroSequenciaR=numeroSequenciaR+MSS;
         }
         if(restoDivisao==0){
           codifica("01010000");
+          writeln("Enviei segmento: " ~ to!string(numeroSequenciaR));
           criaSegmento(portaOrigem,portaDestino,janelaR,18,numeroSequenciaR,numeroReconhecimentoR,bitsControle,cast(char*)dadosA[aux..fimParcial],MSS);
           servidor.send(segmento);
-/*          dadoslenR=servidor.receive(dadosR);
-          separaSegmento2(cast(char*)dadosR,dadoslenR);
-          numeroReconhecimentoR=numeroSequenciaDR+1;
-          numeroSequenciaR=numeroSequenciaR+1;
-*/
         } else {
           int aux2=aux+cast(int)restoDivisao;
           codifica("01010000");
+          writeln("Enviei segmento: " ~ to!string(numeroSequenciaR));
           criaSegmento(portaOrigem,portaDestino,janelaR,18,numeroSequenciaR,numeroReconhecimentoR,bitsControle,cast(char*)dadosA[aux..aux2],restoDivisao);
           servidor.send(segmento);
-/*          dadoslenR=servidor.receive(dadosR);
-          separaSegmento2(cast(char*)dadosR,dadoslenR);
-          numeroReconhecimentoR=numeroSequenciaDR+1;
-          numeroSequenciaR=numeroSequenciaR+1;
-*/
         }
         aux=0;
         fimParcial=MSS;
         i=0;
     }
+
+
+    writeln("FECHAMENTO DE CONEXAAAAAAAAAAAAAAAAAAAAAAAAAAO ");
     dadoslenR = servidor.receive(dadosR);
     separaSegmento(cast(char*)dadosR,dadoslenR);
     numeroReconhecimento=numeroSequenciaD+1;
@@ -308,7 +306,12 @@ class ServidorTCP {
     dadoslenR = servidor.receive(dadosR);
     separaSegmento(cast(char*)dadosR,dadoslenR);
     numeroReconhecimento=numeroSequenciaD+1;
-    servidor.close();
+    codifica("00010000");
+    criaSegmento(portaOrigem,portaDestino,janelaD,18,numeroSequencia,numeroReconhecimento,bitsControle,cast(char*)dadosR[0..0],0);
+    numeroSequencia=numeroSequencia+1;
+    servidor.send(segmento);
+
+    //servidor.close();
   }
 
 

@@ -178,16 +178,13 @@ class Cliente
 			#Agora vamos enviar o quadro
 			@sock.puts quadro
 
-
-			puts "client is offline!" if @server.closed?
-
 			puts "Recebendo resposta do servidor .. .. .. .. .. \n\n"
 			resp = @sock.gets
 			puts "Enviando para transporte"
 
 			puts [resp].pack('B*')
 			@client.write [resp].pack('B*')
-			puts "merda"
+
 		end
 		@client.close
 	end

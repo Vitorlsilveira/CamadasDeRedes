@@ -54,6 +54,7 @@ class ClienteUDP {
     recebeAplicacao();
     enviaFisica(dados, dadoslen);
     //encaminha resposta cliente aplicacao
+    writeln(dados[0 .. dadoslen]);
     cliente.send(dados[0 .. dadoslen]);
     cliente.close();
   }
