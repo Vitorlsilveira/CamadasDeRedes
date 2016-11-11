@@ -120,63 +120,72 @@ class ServidorTCP {
     segmento = to!string(pOrigem)~to!string(pDestino)~to!string(pNumeroSequencia)~to!string(pNumeroReconhecimento)~to!string(bitsControle)~to!string(pJanela)~to!string(pComprimentoCabecalho)~to!string(checksum)~to!string(dados[0..dadoslen]~"\n\r\n");
     writeln("Segmento: ");
     writeln(segmento);
+    writeln("Porta origem:"~to!string(portaOrigem));
+    writeln("Porta destino:"~to!string(portaDestino));
+    writeln("sequencia:"~to!string(numeroSequencia));
+    writeln("reconhecimento:"~to!string(numeroReconhecimento));
+    writeln("bits controle:"~to!string(bitsControle));
+    writeln("janela:"~to!string(janela));
+    writeln("comprimento cabecalho:"~to!string(comprimentoCabecalho));
+    writeln("checksum:"~to!string(checksum));
+    writeln("dados:"~to!string(dados[0..dadoslen]));
   }
 
   void separaSegmento(char *dados,long tam){
     portaOrigemD = cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[0..2]);
-    writeln("Porta origem:"~to!string(portaOrigemD));
+//  writeln("Porta origem:"~to!string(portaOrigemD));
     portaDestinoD = cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[2..4]);
-    writeln("Porta destino:"~to!string(portaDestinoD));
+  //  writeln("Porta destino:"~to!string(portaDestinoD));
     numeroSequenciaD=cast(int)littleEndianToNative!(uint,4)(cast(ubyte[4])dados[4..8]);
-    writeln("sequencia:"~to!string(numeroSequenciaD));
+    //writeln("sequencia:"~to!string(numeroSequenciaD));
     numeroReconhecimentoD=cast(int)littleEndianToNative!(uint,4)(cast(ubyte[4])dados[8..12]);
-    writeln("reconhecimento:"~to!string(numeroReconhecimentoD));
+    //writeln("reconhecimento:"~to!string(numeroReconhecimentoD));
     bitsControleD=cast(char)littleEndianToNative!(byte,1)(cast(ubyte[1])dados[12..13]);
     decodifica(bitsControleD);
     vetorControle=cast(char[])retornoControle;
-    writeln("flag de ultimo segmento:");
-    writeln(vetorControle[1]);
-    writeln("bits controle:"~retornoControle);
+    //writeln("flag de ultimo segmento:");
+    //writeln(vetorControle[1]);
+    //writeln("bits controle:"~retornoControle);
     janelaD=cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[13..15]);
-    writeln("janela:"~to!string(janelaD));
+    //writeln("janela:"~to!string(janelaD));
     comprimentoCabecalhoD=cast(int)littleEndianToNative!(byte,1)(cast(ubyte[1])dados[15..16]);
-    writeln("comprimento cabecalho:"~to!string(comprimentoCabecalhoD));
+    //writeln("comprimento cabecalho:"~to!string(comprimentoCabecalhoD));
     checksumD=cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[16..18]);
     if(tam>=19){
       mensagemD=dados[19..tam-1];
       mensagemE=to!string(mensagemD);
       tamanhoBufferDestinatario=tamanhoBufferDestinatario+cast(int)tam-20;
-      writeln("mensagem: ");
-      writeln(mensagemE);
+      //writeln("mensagem: ");
+      //writeln(mensagemE);
     }
   }
 
   void separaSegmento2(char *dados,long tam){
     portaOrigemDR = cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[0..2]);
-    writeln("Porta origem:"~to!string(portaOrigemD));
+    //writeln("Porta origem:"~to!string(portaOrigemD));
     portaDestinoDR = cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[2..4]);
-    writeln("Porta destino:"~to!string(portaDestinoD));
+    //writeln("Porta destino:"~to!string(portaDestinoD));
     numeroSequenciaDR=cast(int)littleEndianToNative!(uint,4)(cast(ubyte[4])dados[4..8]);
-    writeln("sequencia:"~to!string(numeroSequenciaD));
+    //writeln("sequencia:"~to!string(numeroSequenciaD));
     numeroReconhecimentoDR=cast(int)littleEndianToNative!(uint,4)(cast(ubyte[4])dados[8..12]);
-    writeln("reconhecimento:"~to!string(numeroReconhecimentoD));
+    //writeln("reconhecimento:"~to!string(numeroReconhecimentoD));
     bitsControleDR=cast(char)littleEndianToNative!(byte,1)(cast(ubyte[1])dados[12..13]);
     decodifica(bitsControleDR);
     vetorControle=cast(char[])retornoControle;
-    writeln("flag de ultimo segmento:");
-    writeln(vetorControle[1]);
-    writeln("bits controle:"~to!string(bitsControleD));
+    //writeln("flag de ultimo segmento:");
+    //writeln(vetorControle[1]);
+    //writeln("bits controle:"~to!string(bitsControleD));
     janelaDR=cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[13..15]);
-    writeln("janela:"~to!string(janelaD));
+    //writeln("janela:"~to!string(janelaD));
     comprimentoCabecalhoD=cast(int)littleEndianToNative!(byte,1)(cast(ubyte[1])dados[15..16]);
-    writeln("comprimento cabecalho:"~to!string(comprimentoCabecalhoD));
+    //writeln("comprimento cabecalho:"~to!string(comprimentoCabecalhoD));
     checksumDR=cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[16..18]);
     if(tam>=19){
       mensagemDR=dados[19..tam-1];
       mensagemER=to!string(mensagemD);
       tamanhoBufferDestinatarioR=tamanhoBufferDestinatarioR+cast(int)tam-20;
-      writeln("mensagem: ");
-      writeln(mensagemER);
+      //writeln("mensagem: ");
+      //writeln(mensagemER);
     }
   }
 
@@ -190,16 +199,17 @@ class ServidorTCP {
     janelaD=1;
     numeroSequencia=uniform(0,100);
 
-    writeln("Estabelecimento de conexao (Handshake)");
     /*Estabelecimento de conexão de 3 vias - handshake*/
     dadoslenR = servidor.receive(dadosR);
+    writeln("Estabelecimento de conexao (Handshake)");
     separaSegmento(cast(char*)dadosR,dadoslenR);
+    portaOrigem=portaDestinoD;
+    portaDestino=portaOrigemD;
     numeroReconhecimento=numeroSequenciaD+1;
     codifica("00010010");
     criaSegmento(portaOrigem,portaDestino,janelaD,18,numeroSequencia,numeroReconhecimento,bitsControle,cast(char*)dadosR[0..0],0);
-    numeroSequencia=numeroSequencia+1;
+//    numeroSequencia=numeroSequencia+1;
     servidor.send(segmento);
-
     while(1){
       count++;
       dadoslenR = servidor.receive(dadosR);
@@ -209,6 +219,7 @@ class ServidorTCP {
       bufferDestinatario = bufferDestinatario ~ mensagemE;
       portaOrigem=portaDestinoD;
       portaDestino=portaOrigemD;
+      janela=janelaD;
       numeroSequencia=numeroSequencia+1;
       numeroReconhecimento=numeroSequenciaD+MSS;
       if(vetorControle[1]=='0'){
@@ -249,6 +260,9 @@ class ServidorTCP {
     int numSegmentos=cast(int)(dadoslenA/MSS);
     long restoDivisao= cast(long)(dadoslenA % MSS);
     numeroSequenciaR=numeroSequencia;
+    numeroReconhecimentoR=numeroReconhecimento;
+    portaOrigem=portaDestinoD;
+    portaDestino=portaOrigemD;
     int fimParcial=MSS;
     int aux=0;
     int i=0;
@@ -266,6 +280,8 @@ class ServidorTCP {
           dadoslenR=servidor.receive(dadosR);
           separaSegmento2(cast(char*)dadosR,dadoslenR);
           writeln("Recebi confimacao: "~to!string(numeroReconhecimentoDR));
+          portaOrigem=portaDestinoD;
+          portaDestino=portaOrigemD;
           numeroReconhecimentoR=numeroSequenciaDR+1;
           numeroSequenciaR=numeroSequenciaR+MSS;
         }
@@ -285,19 +301,21 @@ class ServidorTCP {
         fimParcial=MSS;
         i=0;
     }
-
-
     writeln("FECHAMENTO DE CONEXAAAAAAAAAAAAAAAAAAAAAAAAAAO ");
     dadoslenR = servidor.receive(dadosR);
     separaSegmento(cast(char*)dadosR,dadoslenR);
+    portaOrigem=portaDestinoD;
+    portaDestino=portaOrigemD;
     numeroReconhecimento=numeroSequenciaD+1;
     codifica("00010000");
-    numeroSequencia=numeroSequencia+1;
+    numeroSequencia=numeroSequenciaR+1;
     criaSegmento(portaOrigem,portaDestino,janelaD,18,numeroSequencia,numeroReconhecimento,bitsControle,cast(char*)dadosR[0..0],0);
     servidor.send(segmento);
     dadoslenR = servidor.receive(dadosR);
     separaSegmento(cast(char*)dadosR,dadoslenR);
     numeroReconhecimento=numeroSequenciaD+1;
+    portaOrigem=portaDestinoD;
+    portaDestino=portaOrigemD;
     codifica("00010001");
     numeroSequencia=numeroSequencia+1;
     criaSegmento(portaOrigem,portaDestino,janelaD,18,numeroSequencia,numeroReconhecimento,bitsControle,cast(char*)dadosR[0..0],0);
@@ -307,11 +325,11 @@ class ServidorTCP {
     separaSegmento(cast(char*)dadosR,dadoslenR);
     numeroReconhecimento=numeroSequenciaD+1;
     codifica("00010000");
+    portaOrigem=portaDestinoD;
+    portaDestino=portaOrigemD;
     criaSegmento(portaOrigem,portaDestino,janelaD,18,numeroSequencia,numeroReconhecimento,bitsControle,cast(char*)dadosR[0..0],0);
-    numeroSequencia=numeroSequencia+1;
+    numeroSequencia=numeroSequencia;
     servidor.send(segmento);
-
-    //servidor.close();
   }
 
 

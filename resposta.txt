@@ -1,9 +1,13 @@
 HTTP/1.1 200 OK
+<<<<<<< HEAD
 Date: Fri, 11 Nov 2016 11:53:46 BRST
+=======
+Date: Sex, 11 nov 2016 14:16:56 BRST
+>>>>>>> 27345633008a9ea851b79ff27472d3a38ad03ac2
 Server: Servidor dos Maneis
 Connection: Close
 Content-Type: text/html; charset=UTF-8
-
+
 <!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
 <HTML>
    <HEAD>
@@ -16,5 +20,4 @@ Content-Type: text/html; charset=UTF-8
    <P>Como vai, Manel?</P> 
 </BODY>
 </HTML>
-
 
