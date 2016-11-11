@@ -128,7 +128,9 @@ class ClienteTCP {
     listener.bind(new InternetAddress("localhost", 3333));
     listener.listen(10);
     while(1){
-      recebeAplicacao();    
+      readln();
+      recebeAplicacao();
+      readln();      
       enviaFisica(dados, dadoslen);
       recebeResposta();
       cliente.send(mensagem);

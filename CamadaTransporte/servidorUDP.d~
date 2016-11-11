@@ -46,7 +46,7 @@ class ServidorUDP {
     writeln(dados[0..dadoslen]);
     //encaminha resposta pra fisica
     enviaFisica(dados[0..dadoslen],dadoslen);
-    //servidor.close();
+    servidor.close();
   }
 
   void enviaFisica(char[] dadosA, long dadoslenA){

@@ -8,7 +8,9 @@ import std.bitmanip;
 class ClienteUDP {
   int portaOrigem;
   int portaDestino;
-  string mensagem;
+  char[] mensagem;
+  int length;
+  ushort checksum;
 
   char[10000] dados;
   long dadoslen;
@@ -52,26 +54,43 @@ class ClienteUDP {
     while(1){
       recebeAplicacao();
       enviaFisica(dados, dadoslen);
-      writeln(dados[0 .. dadoslen]);
-      cliente.send(dados[0 .. dadoslen]);
+      recebeFisica();
+      writeln(mensagem);
+      cliente.send(mensagem);
     }
     cliente.close();
+  }
+
+  void recebeFisica(){
+
+    dadoslen = socket.receive(dados);
+    portaOrigem = cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[0..2]);
+    portaDestino = cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[2..4]);
+    length = cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[4..6]);
+    checksum = cast(ushort)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[6..8]);
+    writeln("Segmento recebido: ");
+    writeln("Porta origem = " ~ to!string(portaOrigem));
+    writeln("Porta destino = " ~ to!string(portaDestino));
+    writeln("Length= " ~ to!string(length));
+    writeln("Checksum = " ~ to!string(checksum));
+    mensagem = dados[8..dadoslen-2];
   }
 
   void enviaFisica(char[] dadosA, long dadoslenA){
     char[2] pOrigem = cast(char[2])nativeToLittleEndian(cast(ushort)portaOrigem);
     char[2] pDestino = cast(char[2])nativeToLittleEndian(cast(ushort)portaDestino);
-    char[2] length = cast(char[2])nativeToLittleEndian(cast(ushort)(dadoslenA+8));
+    char[2] pLength = cast(char[2])nativeToLittleEndian(cast(ushort)(dadoslenA+8));
     ushort check = checksum16(cast(char*)dadosA[0 .. dadoslenA], cast(int)dadoslenA);
-    char[2] checksum = cast(char[2])nativeToLittleEndian(check);
-
-    segmento = to!string(pOrigem)~to!string(pDestino)~to!string(length)~to!string(checksum)~to!string(dadosA[0 .. dadoslenA]~"\n\r\n");
+    char[2] pChecksum = cast(char[2])nativeToLittleEndian(check);
+    segmento = to!string(pOrigem)~to!string(pDestino)~to!string(pLength)~to!string(pChecksum)~to!string(dadosA[0 .. dadoslenA]~"\n\r\n");
+    writeln("Segmento enviado: ");
     writeln(segmento);
+    writeln("Porta origem = " ~ to!string(portaOrigem));
+    writeln("Porta destino = " ~ to!string(portaDestino));
+    writeln("Length= " ~ to!string(dadoslenA+8));
+    writeln("Checksum = " ~ to!string(pChecksum));
     socket.send(segmento);
 
-    //aguarda resposta
-    writeln("Aguardando resposta");
-    dadoslen = socket.receive(dados);
   }
 
   ushort checksum16(char* addr, int count){
