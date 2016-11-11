@@ -17,6 +17,7 @@ class ClienteTCP {
   string bufferRemetente;
   int tamanhoBufferRemetente;
   char bitsControle;
+  string retornoControle;
   char[] mensagem;
   char[10000] dados;
   char[10000] dadosR;
@@ -44,6 +45,62 @@ class ClienteTCP {
     this.MSS=MSS;
     bufferRemetente="";
   }
+
+  void codifica(string controle){
+        if(controle=="00000010")
+        {
+          bitsControle='I';
+          return;
+        }
+        if(controle=="00010010")
+        {
+          bitsControle='E';
+          return;
+        }
+        if(controle=="00010000")
+        {
+          bitsControle='A';
+          return;
+        }
+        if(controle=="00010001")
+        {
+          bitsControle='F';
+          return;
+        }
+        if(controle=="01010000")
+        {
+          bitsControle='T';
+          return;
+        }
+  }
+
+   void decodifica(char controle){
+         if(controle=='I')
+         {
+           retornoControle="00000010";
+           return ;
+         }
+         if(controle=='E')
+         {
+           retornoControle="00010010";
+           return;
+         }
+         if(controle=='A')
+         {
+           retornoControle="00010000";
+           return;
+         }
+         if (controle=='F')
+         {
+           retornoControle="00010001";
+           return;
+         }
+         if(controle=='T')
+         {
+           retornoControle="01010000";
+           return;
+         }
+    }
 
   void recebeAplicacao(){
     listener = new Socket(AddressFamily.INET, SocketType.STREAM);

@@ -18,6 +18,7 @@ class ServidorTCP {
   int comprimentoCabecalho;
   string bufferDestinatario,bufferDestinatarioR;
   char bitsControle;
+  string retornoControle;
   long dadoslen;
   long dadoslenR;
   ushort checksum;
@@ -49,6 +50,63 @@ class ServidorTCP {
     bufferDestinatario="";
     this.MSS=MSS;
   }
+
+  void codifica(string controle){
+      if(controle=="00000010")
+      {
+        bitsControle='I';
+        return;
+      }
+      if(controle=="00010010")
+      {
+        bitsControle='E';
+        return;
+      }
+      if(controle=="00010000")
+      {
+        bitsControle='A';
+        return;
+      }
+      if(controle=="00010001")
+      {
+        bitsControle='F';
+        return;
+      }
+      if(controle=="01010000")
+      {
+        bitsControle='T';
+        return;
+      }
+}
+
+ void decodifica(char controle){
+       if(controle=='I')
+       {
+         retornoControle="00000010";
+         return ;
+       }
+       if(controle=='E')
+       {
+         retornoControle="00010010";
+         return;
+       }
+       if(controle=='A')
+       {
+         retornoControle="00010000";
+         return;
+       }
+       if (controle=='F')
+       {
+         retornoControle="00010001";
+         return;
+       }
+       if(controle=='T')
+       {
+         retornoControle="01010000";
+         return;
+       }
+  }
+
 
   void criaSegmento(int portaOrigem,int portaDestino,int janela,int comprimentoCabecalho,int numeroSequencia,int numeroReconhecimento,char bitsControle,char *dados,long dadoslen){
     char[2] pOrigem = cast(char[2])nativeToLittleEndian(cast(ushort)portaOrigem);
