@@ -102,8 +102,6 @@ class ClienteTCP {
     }
 
   void recebeAplicacao(){
-
-
     cliente = listener.accept();
     dadoslen = cliente.receive(dados);
     writeln("QNT = " ~ to!string(dadoslen));

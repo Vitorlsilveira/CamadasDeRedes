@@ -11,6 +11,7 @@ class ServidorUDP {
   int portaOrigem;
   int portaDestino;
   char[] mensagem;
+  bool conectado = false;
 
   char[10000] dados;
   long dadoslen;
@@ -41,19 +42,23 @@ class ServidorUDP {
     writeln("recebi da aplicação:");
     writeln(dados[0..dadoslen]);
     //encaminha resposta pra fisica
-    servidor.send(to!string(dados[0 .. dadoslen])~"\n\r\n\r\n");
+    servidor.send(to!string(dados[0 .. dadoslen])~"\n\r\n");
     servidor.close();
   }
 
   void recebeFisica(){
-    servidor = listener.accept();
+    if(!conectado){
+      servidor = listener.accept();
+      conectado = true;
+    }
+
     dadoslen = servidor.receive(dados);
 
     portaOrigem = cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[0..2]);
     portaDestino = cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[2..4]);
     writeln("Porta origem = " ~ to!string(portaOrigem));
     writeln("Porta destino = " ~ to!string(portaDestino));
-    mensagem = dados[8..dadoslen];
+    mensagem = dados[8..dadoslen-2];
   }
 
   ushort checksum16(char* addr, int count){

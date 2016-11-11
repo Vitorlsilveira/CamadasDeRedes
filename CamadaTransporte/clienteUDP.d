@@ -23,15 +23,10 @@ class ClienteUDP {
   }
 
   void recebeAplicacao(){
-    listener = new Socket(AddressFamily.INET, SocketType.STREAM);
-    listener.bind(new InternetAddress("localhost", 3333));
-    listener.listen(10);
-
     cliente = listener.accept();
     dadoslen = cliente.receive(dados);
     writeln("QNT = " ~ to!string(dadoslen));
     writeln(dados[0 .. dadoslen]);
-
   }
 
   void conectaFisica() {
@@ -50,12 +45,16 @@ class ClienteUDP {
 
   void executa() {
     conectaFisica();
-  //  enviaFisica(cast(char[])"1110111", 7);
-    recebeAplicacao();
-    enviaFisica(dados, dadoslen);
-    //encaminha resposta cliente aplicacao
-    writeln(dados[0 .. dadoslen]);
-    cliente.send(dados[0 .. dadoslen]);
+    listener = new Socket(AddressFamily.INET, SocketType.STREAM);
+    listener.bind(new InternetAddress("localhost", 3333));
+    listener.listen(10);
+
+    while(1){
+      recebeAplicacao();
+      enviaFisica(dados, dadoslen);
+      writeln(dados[0 .. dadoslen]);
+      cliente.send(dados[0 .. dadoslen]);
+    }
     cliente.close();
   }
 
@@ -66,11 +65,12 @@ class ClienteUDP {
     ushort check = checksum16(cast(char*)dadosA[0 .. dadoslenA], cast(int)dadoslenA);
     char[2] checksum = cast(char[2])nativeToLittleEndian(check);
 
-    segmento = to!string(pOrigem)~to!string(pDestino)~to!string(length)~to!string(checksum)~to!string(dadosA[0 .. dadoslenA]~"\n\r\n\r\n");
+    segmento = to!string(pOrigem)~to!string(pDestino)~to!string(length)~to!string(checksum)~to!string(dadosA[0 .. dadoslenA]~"\n\r\n");
     writeln(segmento);
     socket.send(segmento);
 
     //aguarda resposta
+    writeln("Aguardando resposta");
     dadoslen = socket.receive(dados);
   }
 
