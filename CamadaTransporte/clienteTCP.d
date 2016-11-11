@@ -33,6 +33,7 @@ class ClienteTCP {
   ushort checksumD;
   char[] mensagemD;
   string mensagemE;
+  int tamDados;
 
   Socket listener, cliente, socket;
 
@@ -128,7 +129,7 @@ class ClienteTCP {
     listener.bind(new InternetAddress("localhost", 3333));
     listener.listen(10);
     while(1){
-      recebeAplicacao();    
+      recebeAplicacao();
       enviaFisica(dados, dadoslen);
       recebeResposta();
       cliente.send(mensagem);
@@ -137,10 +138,11 @@ class ClienteTCP {
   }
 
   void enviaFisica(char[] dadosA, long dadoslenA){
-    int numSegmentos=cast(int)(dadoslenA/MSS);
-    long restoDivisao= cast(long)(dadoslenA % MSS);
+    tamDados=MSS-18;
+    int numSegmentos=cast(int)(dadoslenA/tamDados);
+    long restoDivisao= cast(long)(dadoslenA % tamDados);
     numeroSequencia=uniform(0,100);
-    int fimParcial=MSS;
+    int fimParcial=tamDados;
     int aux=0;
     int i=0;
     janela=numSegmentos;
@@ -159,10 +161,10 @@ class ClienteTCP {
         while(i<numSegmentos-1){
           codifica("00010000");
           writeln("Enviei segmento: " ~ to!string(numeroSequencia));
-          criaSegmento(portaOrigem,portaDestino,janela,18,numeroSequencia,numeroReconhecimento,bitsControle,cast(char*)dadosA[aux..fimParcial],MSS);
+          criaSegmento(portaOrigem,portaDestino,janela,18,numeroSequencia,numeroReconhecimento,bitsControle,cast(char*)dadosA[aux..fimParcial],tamDados);
           socket.send(segmento);
           aux=fimParcial;
-          fimParcial=fimParcial+MSS;
+          fimParcial=fimParcial+tamDados;
           i=i+1;
           dadoslenR=socket.receive(dadosR);
           separaSegmento(cast(char*)dadosR,dadoslenR);
@@ -174,7 +176,7 @@ class ClienteTCP {
         }
         if(restoDivisao==0){
           codifica("01010000");
-          criaSegmento(portaOrigem,portaDestino,janela,18,numeroSequencia,numeroReconhecimento,bitsControle,cast(char*)dadosA[aux..fimParcial],MSS);
+          criaSegmento(portaOrigem,portaDestino,janela,18,numeroSequencia,numeroReconhecimento,bitsControle,cast(char*)dadosA[aux..fimParcial],tamDados);
           socket.send(segmento);
         }
         else{
@@ -183,7 +185,7 @@ class ClienteTCP {
           socket.send(segmento);
         }
         aux=0;
-        fimParcial=MSS;
+        fimParcial=tamDados;
         i=0;
     }
   }
@@ -315,18 +317,10 @@ class ClienteTCP {
      return checksum;
  }
 }
-/*
-T= to mandando ultimo segmento
-A= ACK
-S= SYN
-F= FIN
-0T0A00SF
-00000010
-0001
-*/
+
 void main() {
     const port = thisProcessID;
-    auto cliente = new ClienteTCP(port, 5555,10);
+    auto cliente = new ClienteTCP(port, 5555,28);
 
     cliente.executa();
 }

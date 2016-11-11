@@ -40,6 +40,7 @@ class ServidorTCP {
   ushort checksumD,checksumDR;
   char[] mensagemD,mensagemDR;
   string mensagemE,mensagemER;
+  int tamDados;
   bool conectado = false;
   Socket listener, servidor, socket;
 
@@ -255,15 +256,16 @@ class ServidorTCP {
     writeln("\nDados recebidos da aplicacao: ");
     writeln(dados[0..dadoslen]);
     //encaminha resposta pra fisica
+    tamDados=MSS-18;
     long dadoslenA=dadoslen;
     dadosA=dados;
-    int numSegmentos=cast(int)(dadoslenA/MSS);
-    long restoDivisao= cast(long)(dadoslenA % MSS);
+    int numSegmentos=cast(int)(dadoslenA/tamDados);
+    long restoDivisao= cast(long)(dadoslenA % tamDados);
     numeroSequenciaR=numeroSequencia;
     numeroReconhecimentoR=numeroReconhecimento;
     portaOrigem=portaDestinoD;
     portaDestino=portaOrigemD;
-    int fimParcial=MSS;
+    int fimParcial=tamDados;
     int aux=0;
     int i=0;
     janelaR=numSegmentos;
@@ -272,10 +274,10 @@ class ServidorTCP {
         while(i<numSegmentos){
           codifica("00010000");
           writeln("Enviei segmento: " ~ to!string(numeroSequenciaR));
-          criaSegmento(portaOrigem,portaDestino,janelaR,18,numeroSequenciaR,numeroReconhecimentoR,bitsControle,cast(char*)dadosA[aux..fimParcial],MSS);
+          criaSegmento(portaOrigem,portaDestino,janelaR,18,numeroSequenciaR,numeroReconhecimentoR,bitsControle,cast(char*)dadosA[aux..fimParcial],tamDados);
           servidor.send(segmento);
           aux=fimParcial;
-          fimParcial=fimParcial+MSS;
+          fimParcial=fimParcial+tamDados;
           i=i+1;
           dadoslenR=servidor.receive(dadosR);
           separaSegmento2(cast(char*)dadosR,dadoslenR);
@@ -288,7 +290,7 @@ class ServidorTCP {
         if(restoDivisao==0){
           codifica("01010000");
           writeln("Enviei segmento: " ~ to!string(numeroSequenciaR));
-          criaSegmento(portaOrigem,portaDestino,janelaR,18,numeroSequenciaR,numeroReconhecimentoR,bitsControle,cast(char*)dadosA[aux..fimParcial],MSS);
+          criaSegmento(portaOrigem,portaDestino,janelaR,18,numeroSequenciaR,numeroReconhecimentoR,bitsControle,cast(char*)dadosA[aux..fimParcial],tamDados);
           servidor.send(segmento);
         } else {
           int aux2=aux+cast(int)restoDivisao;
@@ -298,7 +300,7 @@ class ServidorTCP {
           servidor.send(segmento);
         }
         aux=0;
-        fimParcial=MSS;
+        fimParcial=tamDados;
         i=0;
     }
     writeln("FECHAMENTO DE CONEXAAAAAAAAAAAAAAAAAAAAAAAAAAO ");
@@ -355,7 +357,7 @@ class ServidorTCP {
 }
 
 void main() {
-  auto servidor = new ServidorTCP(10);
+  auto servidor = new ServidorTCP(28);
   while(true) {
     servidor.recebeFisica();
   }
