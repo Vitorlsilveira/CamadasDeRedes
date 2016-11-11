@@ -93,14 +93,14 @@ class ClienteTCP {
     janela=numSegmentos;
     writeln(numSegmentos);
     /*Estabelecimento de conexão de 3 vias- handshake*/
-    /*
+
     criaSegmento(portaOrigem,portaDestino,janelaD,18,numeroSequencia,numeroReconhecimento,cast(char)'A',cast(char*)dadosR[0..0],0);
     socket.send(segmento);
     numeroSequencia=numeroSequencia+1;
     dadoslenR = socket.receive(dadosR);
     separaSegmento(cast(char*)dadosR,dadoslenR);
     numeroReconhecimento=numeroSequenciaD+1;
-    */
+
     if(numSegmentos>0){
         while(i<numSegmentos-1){
           janela=janela-1;
@@ -161,30 +161,27 @@ class ClienteTCP {
         mensagem=cast(char[])bufferRemetente;
         writeln("mensagem");
         writeln(mensagem);
+
         break;
       }
     }
     /*Continua fechamento de conexão*/
-/*    criaSegmento(portaOrigem,portaDestino,janelaD,18,numeroSequencia,numeroReconhecimento,cast(char)'F',cast(char*)dadosR[0..0],0);
+    criaSegmento(portaOrigem,portaDestino,janelaD,18,numeroSequencia,numeroReconhecimento,cast(char)'F',cast(char*)dadosR[0..0],0);
     socket.send(segmento);
-    writeln("cu mattar");
     dadoslenR = socket.receive(dadosR);
-    writeln("cu lauro");
     separaSegmento(cast(char*)dadosR,dadoslenR);
     numeroSequencia=numeroSequencia+1;
     numeroReconhecimento=numeroSequenciaD+1;
     criaSegmento(portaOrigem,portaDestino,janelaD,18,numeroSequencia,numeroReconhecimento,cast(char)'N',cast(char*)dadosR[0..0],0);
     socket.send(segmento);
-    writeln("cu dornas");
     dadoslenR = socket.receive(dadosR);
-    writeln("cu marchezini");
     separaSegmento(cast(char*)dadosR,dadoslenR);
     numeroSequencia=numeroSequencia+1;
     numeroReconhecimento=numeroSequenciaD+1;
     criaSegmento(portaOrigem,portaDestino,janelaD,18,numeroSequencia,numeroReconhecimento,cast(char)'A',cast(char*)dadosR[0..0],0);
     socket.send(segmento);
-    writeln("cu daniboy");
-    */
+    
+
   }
 
   void criaSegmento(int portaOrigem,int portaDestino,int janela,int comprimentoCabecalho,int numeroSequencia,int numeroReconhecimento,char bitsControle,char *dados,long dadoslen){

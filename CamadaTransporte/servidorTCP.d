@@ -122,14 +122,14 @@ class ServidorTCP {
     janelaD=1;
     numeroSequencia=uniform(0,100);
     /*Estabelecimento de conexão de 3 vias - handshake*/
-    /*
-    dadoslenR = socket.receive(dadosR);
+
+    dadoslenR = servidor.receive(dadosR);
     separaSegmento(cast(char*)dadosR,dadoslenR);
     numeroReconhecimento=numeroSequenciaD+1;
     criaSegmento(portaOrigem,portaDestino,janelaD,18,numeroSequencia,numeroReconhecimento,cast(char)'A',cast(char*)dadosR[0..0],0);
     numeroSequencia=numeroSequencia+1;
-    socket.send(segmento);
-    */
+    servidor.send(segmento);
+
     while(janelaD < 99){
       writeln("entrei no loop");
       count++;
@@ -217,31 +217,21 @@ class ServidorTCP {
         fimParcial=MSS;
         i=0;
     }
-/*    writeln("cu do dornas");
-    dadoslenR = socket.receive(dadosR);
-    writeln("cu do marchezini");
-    readln();
+    dadoslenR = servidor.receive(dadosR);
     separaSegmento(cast(char*)dadosR,dadoslenR);
     numeroReconhecimento=numeroSequenciaD+1;
     criaSegmento(portaOrigem,portaDestino,janelaD,18,numeroSequencia,numeroReconhecimento,cast(char)'A',cast(char*)dadosR[0..0],0);
     numeroSequencia=numeroSequencia+1;
-    socket.send(segmento);
-    readln();
-    writeln("cu do mattar");
-    dadoslenR = socket.receive(dadosR);
+    servidor.send(segmento);
+    dadoslenR = servidor.receive(dadosR);
     separaSegmento(cast(char*)dadosR,dadoslenR);
-    readln();
-    writeln("cu do borba");
     numeroReconhecimento=numeroSequenciaD+1;
     criaSegmento(portaOrigem,portaDestino,janelaD,18,numeroSequencia,numeroReconhecimento,cast(char)'F',cast(char*)dadosR[0..0],0);
     numeroSequencia=numeroSequencia+1;
-    socket.send(segmento);
-    writeln("cu do daniboy");
-    dadoslenR = socket.receive(dadosR);
-    writeln("cu do lauro");
+    servidor.send(segmento);
+    dadoslenR = servidor.receive(dadosR);
     separaSegmento(cast(char*)dadosR,dadoslenR);
     numeroReconhecimento=numeroSequenciaD+1;
-*/
     servidor.close();
   }
 

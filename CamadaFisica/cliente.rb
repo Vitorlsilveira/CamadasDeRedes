@@ -103,6 +103,7 @@ class Cliente
 		puts "Ouvindo do cliente de transporte na porta #{@port}"
 		# espera pela conexão do cliente da camada de aplicação
 
+
 		while true
 			puts "Aguardando pacote"
 			dados = ""
@@ -175,7 +176,10 @@ class Cliente
 			File.write("quadro.txt", quadro)
 
 			#Agora vamos enviar o quadro
-			@sock.puts quadro;
+			@sock.puts quadro
+
+
+			puts "client is offline!" if @server.closed?
 
 			puts "Recebendo resposta do servidor .. .. .. .. .. \n\n"
 			resp = @sock.gets
