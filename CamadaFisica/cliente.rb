@@ -13,6 +13,7 @@ class Cliente
 		#pega o IP do arquivo
 		@destinoIP = "localhost"
 		@msg = ""
+		@client=@server.accept
 		@origemPorta = ""
 		@destinoPorta = ""
 	end
@@ -101,11 +102,11 @@ class Cliente
 		dados = ""
 		puts "Ouvindo do cliente de transporte na porta #{@port}"
 		# espera pela conexão do cliente da camada de aplicação
-		client = @server.accept
+
 		while true
 			puts "Aguardando pacote"
 			dados = ""
-			while line = client.gets
+			while line = @client.gets
 				if line == "\r\n"
 					break
 				end
@@ -118,7 +119,7 @@ class Cliente
 			conectaServidor()
 			if @msg.include?"1110111"
 				tmq = pedirTMQ()
-				client.puts tmq
+				@client.puts tmq
 				dados = client.gets
 				pacote = lerPacote(dados)
 			end
@@ -181,9 +182,10 @@ class Cliente
 			puts "Enviando para transporte"
 
 			puts [resp].pack('B*')
-			client.puts [resp].pack('B*')
+			@client.write [resp].pack('B*')
+			puts "merda"
 		end
-		client.close
+		@client.close
 	end
 
 end

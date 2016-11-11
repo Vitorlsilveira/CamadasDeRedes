@@ -16,27 +16,29 @@ class ServidorTCP {
   int numeroSequencia, numeroSequenciaR;
   int numeroReconhecimento, numeroReconhecimentoR;
   int comprimentoCabecalho;
-  string bufferDestinatario;
+  string bufferDestinatario,bufferDestinatarioR;
   char bitsControle;
   long dadoslen;
   long dadoslenR;
   ushort checksum;
   string segmento;
   char[10000] dados;
+  char[10000] dadosA;
   char[10000] dadosR;
   char[] mensagem;
 
-  int portaOrigemD;
-  int portaDestinoD;
+  int portaOrigemD,portaOrigemDR;
+  int portaDestinoD,portaDestinoDR;
   int numeroSequenciaD, numeroSequenciaDR;
-  int numeroReconhecimentoD;
-  char bitsControleD;
-  int janelaD;
+  int numeroReconhecimentoD,numeroReconhecimentoDR;
+  char bitsControleD,bitsControleDR;
+  int janelaD,janelaDR;
   int tamanhoBufferDestinatario=0;
-  int comprimentoCabecalhoD;
-  ushort checksumD;
-  char[] mensagemD;
-  string mensagemE;
+  int tamanhoBufferDestinatarioR=0;
+  int comprimentoCabecalhoD,comprimentoCabecalhoDR;
+  ushort checksumD,checksumDR;
+  char[] mensagemD,mensagemDR;
+  string mensagemE,mensagemER;
 
   Socket listener, servidor, socket;
 
@@ -87,6 +89,30 @@ class ServidorTCP {
     }
   }
 
+  void separaSegmento2(char *dados,long tam){
+    portaOrigemDR = cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[0..2]);
+//    writeln("Porta origem:"~to!string(portaOrigemD));
+    portaDestinoDR = cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[2..4]);
+  //  writeln("Porta destino:"~to!string(portaDestinoD));
+    numeroSequenciaDR=cast(int)littleEndianToNative!(uint,4)(cast(ubyte[4])dados[4..8]);
+    //writeln("sequencia:"~to!string(numeroSequenciaD));
+    numeroReconhecimentoDR=cast(int)littleEndianToNative!(uint,4)(cast(ubyte[4])dados[8..12]);
+    //writeln("reconhecimento:"~to!string(numeroReconhecimentoD));
+    bitsControleDR=cast(char)littleEndianToNative!(byte,1)(cast(ubyte[1])dados[12..13]);
+    //writeln("bits controle:"~to!string(bitsControleD));
+    janelaDR=cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[13..15]);
+    //writeln("janela:"~to!string(janelaD));
+    comprimentoCabecalhoD=cast(int)littleEndianToNative!(byte,1)(cast(ubyte[1])dados[15..16]);
+    //writeln("comprimento cabecalho:"~to!string(comprimentoCabecalhoD));
+    checksumDR=cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[16..18]);
+    if(tam>=19){
+      mensagemDR=dados[19..tam-1];
+      mensagemER=to!string(mensagemD);
+      tamanhoBufferDestinatarioR=tamanhoBufferDestinatarioR+cast(int)tam-20;
+      writeln("mensagem: ");
+      writeln(mensagemER);
+    }
+  }
 
   void recebeFisica(){
     writeln("esperando conexao");
@@ -95,6 +121,15 @@ class ServidorTCP {
     int count=0;
     janelaD=1;
     numeroSequencia=uniform(0,100);
+    /*Estabelecimento de conexão de 3 vias - handshake*/
+    /*
+    dadoslenR = socket.receive(dadosR);
+    separaSegmento(cast(char*)dadosR,dadoslenR);
+    numeroReconhecimento=numeroSequenciaD+1;
+    criaSegmento(portaOrigem,portaDestino,janelaD,18,numeroSequencia,numeroReconhecimento,cast(char)'A',cast(char*)dadosR[0..0],0);
+    numeroSequencia=numeroSequencia+1;
+    socket.send(segmento);
+    */
     while(janelaD < 99){
       writeln("entrei no loop");
       count++;
@@ -109,8 +144,10 @@ class ServidorTCP {
       portaDestino=portaOrigemD;
       numeroSequencia=numeroSequencia+1;
       numeroReconhecimento=numeroSequenciaD+1;
+      if(janelaD!=99){
       criaSegmento(portaOrigem,portaDestino,janelaD,18,numeroSequencia,numeroReconhecimento,cast(char)'A',cast(char*)dadosR[0..0],0);
       servidor.send(segmento);
+      }
     }
     mensagem=cast(char[])bufferDestinatario;
     writeln("mensagem");
@@ -124,65 +161,90 @@ class ServidorTCP {
         continue;
       }
     }
-    writeln("\nEnviando para Aplicacao \n" ~ mensagem);
+    writeln("\nEnviando para Aplicacao \n" ~ mensagem[0..tamanhoBufferDestinatario-1]);
     // Envia a requisicao pra aplicacao
-    socket.send(mensagem);
+    socket.send(mensagem[0..tamanhoBufferDestinatario-1]);
     //recebe resposta
     dadoslen = socket.receive(dados);
     socket.close();
     writeln("\ndados recebidos da aplicacao");
     writeln(dados[0..dadoslen]);
     //encaminha resposta pra fisica
-    //servidor.send(dados[0 .. dadoslen]);
-    enviaResposta(dados, dadoslen);
-    servidor.close();
-  }
-
-  void enviaResposta(char[] dadosA, long dadoslenA){
+    long dadoslenA=dadoslen;
+    dadosA=dados;
     int numSegmentos=cast(int)(dadoslenA/MSS);
     long restoDivisao= cast(long)(dadoslenA % MSS);
-    numeroSequenciaR=uniform(0,100);
+    numeroSequenciaR=numeroSequencia;
     int fimParcial=MSS;
     int aux=0;
     int i=0;
     janelaR=numSegmentos;
     writeln(numSegmentos);
     if(numSegmentos>0){
-        while(i<numSegmentos-1){
-          janela=janela-1;
-          criaSegmento(portaOrigemR,portaDestinoR,janela,18,numeroSequenciaR,numeroReconhecimentoR,cast(char)'A',cast(char*)dadosA[aux..fimParcial],MSS);
-          socket.send(segmento);
+        while(i<numSegmentos){
+          janelaR=janelaR-1;
+          criaSegmento(portaOrigem,portaDestino,janelaR,18,numeroSequenciaR,numeroReconhecimentoR,cast(char)'A',cast(char*)dadosA[aux..fimParcial],MSS);
+          servidor.send(segmento);
           writeln("ENVIOUUUU");
           aux=fimParcial;
           fimParcial=fimParcial+MSS;
           i=i+1;
-          dadoslenR=socket.receive(dadosR);
-          separaSegmento(cast(char*)dadosR,dadoslenR);
+          dadoslenR=servidor.receive(dadosR);
+          separaSegmento2(cast(char*)dadosR,dadoslenR);
           writeln("Recebi já");
           numeroReconhecimentoR=numeroSequenciaDR+1;
           numeroSequenciaR=numeroSequenciaR+1;
         }
         if(restoDivisao==0){
-          criaSegmento(portaOrigemR,portaDestinoR,99,18,numeroSequenciaR,numeroReconhecimentoR,cast(char)'A',cast(char*)dadosA[aux..fimParcial],MSS);
-          socket.send(segmento);
-          dadoslenR=socket.receive(dadosR);
-          separaSegmento(cast(char*)dadosR,dadoslenR);
+          criaSegmento(portaOrigem,portaDestino,100,18,numeroSequenciaR,numeroReconhecimentoR,cast(char)'A',cast(char*)dadosA[aux..fimParcial],MSS);
+          servidor.send(segmento);
+/*          dadoslenR=servidor.receive(dadosR);
+          separaSegmento2(cast(char*)dadosR,dadoslenR);
           numeroReconhecimentoR=numeroSequenciaDR+1;
           numeroSequenciaR=numeroSequenciaR+1;
+*/
         } else {
-          janela=janela-1;
-          criaSegmento(portaOrigemR,portaDestinoR,99,18,numeroSequenciaR,numeroReconhecimentoR,cast(char)'A',cast(char*)dadosA[aux..aux+restoDivisao],restoDivisao);
-          socket.send(segmento);
-          dadoslenR=socket.receive(dadosR);
-          separaSegmento(cast(char*)dadosR,dadoslenR);
+          int aux2=aux+cast(int)restoDivisao;
+          criaSegmento(portaOrigem,portaDestino,100,18,numeroSequenciaR,numeroReconhecimentoR,cast(char)'A',cast(char*)dadosA[aux..aux2],restoDivisao);
+          servidor.send(segmento);
+/*          dadoslenR=servidor.receive(dadosR);
+          separaSegmento2(cast(char*)dadosR,dadoslenR);
           numeroReconhecimentoR=numeroSequenciaDR+1;
           numeroSequenciaR=numeroSequenciaR+1;
+*/
         }
         aux=0;
         fimParcial=MSS;
         i=0;
     }
+/*    writeln("cu do dornas");
+    dadoslenR = socket.receive(dadosR);
+    writeln("cu do marchezini");
+    readln();
+    separaSegmento(cast(char*)dadosR,dadoslenR);
+    numeroReconhecimento=numeroSequenciaD+1;
+    criaSegmento(portaOrigem,portaDestino,janelaD,18,numeroSequencia,numeroReconhecimento,cast(char)'A',cast(char*)dadosR[0..0],0);
+    numeroSequencia=numeroSequencia+1;
+    socket.send(segmento);
+    readln();
+    writeln("cu do mattar");
+    dadoslenR = socket.receive(dadosR);
+    separaSegmento(cast(char*)dadosR,dadoslenR);
+    readln();
+    writeln("cu do borba");
+    numeroReconhecimento=numeroSequenciaD+1;
+    criaSegmento(portaOrigem,portaDestino,janelaD,18,numeroSequencia,numeroReconhecimento,cast(char)'F',cast(char*)dadosR[0..0],0);
+    numeroSequencia=numeroSequencia+1;
+    socket.send(segmento);
+    writeln("cu do daniboy");
+    dadoslenR = socket.receive(dadosR);
+    writeln("cu do lauro");
+    separaSegmento(cast(char*)dadosR,dadoslenR);
+    numeroReconhecimento=numeroSequenciaD+1;
+*/
+    servidor.close();
   }
+
 
   ushort checksum16(char* addr, int count){
     /* Compute Internet Checksum for "count" bytes
