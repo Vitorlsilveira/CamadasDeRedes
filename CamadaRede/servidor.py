@@ -1,4 +1,32 @@
+# -*- coding: utf-8 -*-
+import socket
+import sys
 import os
+
+BUFFER_SIZE = 1024
+
+
+def create_server(host,port):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # Cria o descritor do socket
+    sock.bind((host, port)) # Associa o endereço e porta ao descritor do socket.
+    sock.listen(10) # Tamanho maximo da fila de conexões pendentes
+
+    MSG_DO_SERVIDOR = "servidor manelzinho"
+    print("Aguardando conexoes na porta:"+str(port)+"\n")
+
+    while True:
+        try:
+            (con, address) = sock.accept() # aceita conexoes e recupera o endereco do cliente.
+            print(address[0]+" Conectado...")
+            data = con.recv(BUFFER_SIZE) # Recebe uma mensagem do tamanho BUFFER_SIZE
+            if len(str(data)) >= 0:
+                print(address[0]+" diz: " + data.decode('UTF-8'))
+                print("Resposta do servidor: " + MSG_DO_SERVIDOR)
+                con.send(MSG_DO_SERVIDOR.encode('utf-8')) # Envia mensagem através do socket.
+            else:
+                print("Sem dados recebidos de: "+address[0])
+        except ValueError:
+            print("Erro")
 
 def calculaIPRede(ip,mask):
     ipRede=""
@@ -32,7 +60,7 @@ def calculaIPRede(ip,mask):
             ipRede=ipRede+str(int(numIP)&int(numMask))
     return ipRede
 
-
+create_server("localhost",8004)
 ipRede=calculaIPRede("192.168.10.20","255.255.141.0")
 print ipRede
     #    192.168.10.20
