@@ -5,28 +5,58 @@ import os
 
 BUFFER_SIZE = 1024
 
+while True:
+    try:
+        socktransporte = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # Cria o descritor do socket
+        socktransporte.connect(("localhost", 6768)) # Realiza a conexão no host e porta definidos
+        break
+    except:
+        continue
 
-def create_server(host,port):
+
+def recebe_fisica(port):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # Cria o descritor do socket
-    sock.bind((host, port)) # Associa o endereço e porta ao descritor do socket.
+    sock.bind(("localhost", port)) # Associa o endereço e porta ao descritor do socket.
     sock.listen(10) # Tamanho maximo da fila de conexões pendentes
 
-    MSG_DO_SERVIDOR = "servidor manelzinho"
-    print("Aguardando conexoes na porta:"+str(port)+"\n")
+    print("Aguardando conexoes da camada fisica: "+str(port)+"\n")
+
+    (con, address) = sock.accept() # aceita conexoes e recupera o endereco do cliente.
+    print(address[0]+" Conectado...")
 
     while True:
+        #try:
+        datagrama = con.recv(BUFFER_SIZE) # Recebe uma mensagem do tamanho BUFFER_SIZE
+        if len(str(datagrama)) >= 0:
+            print(address[0]+" diz: " + datagrama)
+            #reposta = decodifica_datagrama
+            resposta = conecta_transporte(datagrama)
+            print("Resposta da transporte: " + resposta)
+            con.send(resposta) # Envia mensagem através do socket.
+        else:
+            print("Sem dados recebidos de camada de transporte: "+address[0])
+        #except ValueError:
+        #    print("Erro")
+
+
+def conecta_transporte(segmento):
+    while True:
         try:
-            (con, address) = sock.accept() # aceita conexoes e recupera o endereco do cliente.
-            print(address[0]+" Conectado...")
-            data = con.recv(BUFFER_SIZE) # Recebe uma mensagem do tamanho BUFFER_SIZE
-            if len(str(data)) >= 0:
-                print(address[0]+" diz: " + data.decode('UTF-8'))
-                print("Resposta do servidor: " + MSG_DO_SERVIDOR)
-                con.send(MSG_DO_SERVIDOR.encode('utf-8')) # Envia mensagem através do socket.
+            print("Mensagem enviada para transporte >>> "+ segmento)
+            socktransporte.send(segmento) # Envia uma mensagem através do socket.
+            resposta = socktransporte.recv(BUFFER_SIZE) # Recebe mensagem enviada pelo socket.
+            if len(str(segmento)) >= 0:
+                print("Mensagem recebida do servidor transporte: " + resposta)
+                break
             else:
-                print("Sem dados recebidos de: "+address[0])
-        except ValueError:
-            print("Erro")
+                print("Nenhum dado recebido do servidor...")
+        except socket.error as serr:
+            if serr.errno != errno.ECONNREFUSED:
+                # Not the error we are looking for, re-raise
+                raise serr
+    return resposta
+
+
 
 def calculaIPRede(ip,mask):
     ipRede=""
@@ -60,9 +90,10 @@ def calculaIPRede(ip,mask):
             ipRede=ipRede+str(int(numIP)&int(numMask))
     return ipRede
 
-create_server("localhost",8004)
+recebe_fisica(4444)
 ipRede=calculaIPRede("192.168.10.20","255.255.141.0")
 print ipRede
+
     #    192.168.10.20
     #    AND BIT A BIT
     #    255.255.255.128

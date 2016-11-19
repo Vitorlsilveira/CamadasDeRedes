@@ -6,8 +6,8 @@ require 'socket'
 class Cliente
 	def initialize(interface)
 		@interface=interface
-		@server=TCPServer.open(7777)
-		@port=7777
+		@server=TCPServer.open(9999)
+		@port=9999
 		#pega o IP do arquivo
 		@origemIP = "localhost"
 		#pega o IP do arquivo

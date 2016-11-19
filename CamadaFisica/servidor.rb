@@ -8,7 +8,7 @@ class Servidor
     @sock1=nil
 		while @sock1==nil
       begin
-			@sock1 = TCPSocket.open("localhost",6768)
+			@sock1 = TCPSocket.open("localhost",4444)
 			rescue
 				@sock1=nil
         sleep 1
