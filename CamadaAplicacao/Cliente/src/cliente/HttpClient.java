@@ -2,7 +2,9 @@ package cliente;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -110,7 +112,16 @@ public class HttpClient {
     }
 
     public static void main(String[] args) {
-        HttpClient client = new HttpClient("localhost", 6768, "localhost");
+        File f = new File("config");
+        BufferedReader br;
+        String ipDest = "127.0.0.1";
+        try {
+            br = new BufferedReader(new FileReader(f));
+            ipDest = br.readLine();
+        } catch (IOException ex) {
+            Logger.getLogger(HttpClient.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        HttpClient client = new HttpClient(ipDest, 6768, "localhost");
         try {
             System.out.println(client.getURIRawContent("/hello.html"));
         } catch (UnknownHostException e) {

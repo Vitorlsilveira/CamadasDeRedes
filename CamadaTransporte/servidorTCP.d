@@ -190,8 +190,8 @@ class ServidorTCP {
     }
   }
 
-  void recebeFisica(){
-    writeln("Esperando conexao com camada fisica");
+  void recebeRede(){
+    writeln("Esperando conexao com camada Rede");
     if(!conectado){
       servidor = listener.accept();
       conectado = true;
@@ -255,7 +255,7 @@ class ServidorTCP {
     socket.close();
     writeln("\nDados recebidos da aplicacao: ");
     writeln(dados[0..dadoslen]);
-    //encaminha resposta pra fisica
+    //encaminha resposta pra Rede
     tamDados=MSS-18;
     long dadoslenA=dadoslen;
     dadosA=dados;
@@ -359,6 +359,6 @@ class ServidorTCP {
 void main() {
   auto servidor = new ServidorTCP(28);
   while(true) {
-    servidor.recebeFisica();
+    servidor.recebeRede();
   }
 }

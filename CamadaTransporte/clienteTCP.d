@@ -109,9 +109,9 @@ class ClienteTCP {
     writeln(dados[0 .. dadoslen]);
   }
 
-  void conectaFisica() {
+  void conectaRede() {
     socket = new Socket(AddressFamily.INET,  SocketType.STREAM);
-    writeln("Aguardando cliente da camada fisica");
+    writeln("Aguardando cliente da camada Rede");
     while(true){
       try {
         socket.connect(new InternetAddress("localhost", 7777));
@@ -124,20 +124,20 @@ class ClienteTCP {
   }
 
   void executa() {
-    conectaFisica();
+    conectaRede();
     listener = new Socket(AddressFamily.INET, SocketType.STREAM);
     listener.bind(new InternetAddress("localhost", 3333));
     listener.listen(10);
     while(1){
       recebeAplicacao();
-      enviaFisica(dados, dadoslen);
+      enviaRede(dados, dadoslen);
       recebeResposta();
       cliente.send(mensagem);
     }
     cliente.close();
   }
 
-  void enviaFisica(char[] dadosA, long dadoslenA){
+  void enviaRede(char[] dadosA, long dadoslenA){
     tamDados=MSS-18;
     int numSegmentos=cast(int)(dadoslenA/tamDados);
     long restoDivisao= cast(long)(dadoslenA % tamDados);
@@ -181,7 +181,7 @@ class ClienteTCP {
         }
         else{
           codifica("01010000");
-          criaSegmento(portaOrigem,portaDestino,janela,18,numeroSequencia,numeroReconhecimento,bitsControle,cast(char*)dadosA[aux..restoDivisao],restoDivisao);
+          criaSegmento(portaOrigem,portaDestino,janela,18,numeroSequencia,numeroReconhecimento,bitsControle,cast(char*)dadosA[aux..aux+restoDivisao],restoDivisao);
           socket.send(segmento);
         }
         aux=0;

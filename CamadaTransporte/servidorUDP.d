@@ -44,12 +44,12 @@ class ServidorUDP {
     dadoslen = socket.receive(dados);
     writeln("recebi da aplicação:");
     writeln(dados[0..dadoslen]);
-    //encaminha resposta pra fisica
-    enviaFisica(dados[0..dadoslen],dadoslen);
+    //encaminha resposta pra Rede
+    enviaRede(dados[0..dadoslen],dadoslen);
     //servidor.close();
   }
 
-  void enviaFisica(char[] dadosA, long dadoslenA){
+  void enviaRede(char[] dadosA, long dadoslenA){
     char[2] pOrigem = cast(char[2])nativeToLittleEndian(cast(ushort)portaDestino);
     char[2] pDestino = cast(char[2])nativeToLittleEndian(cast(ushort)portaOrigem);
     char[2] pLength = cast(char[2])nativeToLittleEndian(cast(ushort)(dadoslenA+8));
@@ -67,7 +67,7 @@ class ServidorUDP {
   }
 
 
-  void recebeFisica(){
+  void recebeRede(){
     if(!conectado){
       servidor = listener.accept();
       conectado = true;
@@ -110,7 +110,7 @@ class ServidorUDP {
 void main() {
   auto servidor = new ServidorUDP();
   while(true) {
-    servidor.recebeFisica();
+    servidor.recebeRede();
     servidor.enviaAplicacao();
   }
 }

@@ -11,7 +11,7 @@ class Cliente
 		#pega o IP do arquivo
 		@origemIP = "localhost"
 		#pega o IP do arquivo
-		@destinoIP = "localhost"
+		@destinoIP = File.open("config", 'r').gets
 		@msg = ""
 		@client=@server.accept
 		@origemPorta = ""

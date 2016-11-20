@@ -31,9 +31,9 @@ class ClienteUDP {
     writeln(dados[0 .. dadoslen]);
   }
 
-  void conectaFisica() {
+  void conectaRede() {
     socket = new Socket(AddressFamily.INET,  SocketType.STREAM);
-    writeln("Aguardando cliente da camada fisica");
+    writeln("Aguardando cliente da camada Rede");
     while(true){
       try {
         socket.connect(new InternetAddress("localhost", 7777));
@@ -46,22 +46,22 @@ class ClienteUDP {
   }
 
   void executa() {
-    conectaFisica();
+    conectaRede();
     listener = new Socket(AddressFamily.INET, SocketType.STREAM);
     listener.bind(new InternetAddress("localhost", 3333));
     listener.listen(10);
 
     while(1){
       recebeAplicacao();
-      enviaFisica(dados, dadoslen);
-      recebeFisica();
+      enviaRede(dados, dadoslen);
+      recebeRede();
       writeln(mensagem);
       cliente.send(mensagem);
     }
     cliente.close();
   }
 
-  void recebeFisica(){
+  void recebeRede(){
 
     dadoslen = socket.receive(dados);
     portaOrigem = cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[0..2]);
@@ -76,7 +76,7 @@ class ClienteUDP {
     mensagem = dados[8..dadoslen-2];
   }
 
-  void enviaFisica(char[] dadosA, long dadoslenA){
+  void enviaRede(char[] dadosA, long dadoslenA){
     char[2] pOrigem = cast(char[2])nativeToLittleEndian(cast(ushort)portaOrigem);
     char[2] pDestino = cast(char[2])nativeToLittleEndian(cast(ushort)portaDestino);
     char[2] pLength = cast(char[2])nativeToLittleEndian(cast(ushort)(dadoslenA+8));
