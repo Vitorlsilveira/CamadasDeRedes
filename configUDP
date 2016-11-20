@@ -1,0 +1,105 @@
+[global_config]
+  suppress_multiple_term_dialog = True
+[keybindings]
+[profiles]
+  [[default]]
+    background_image = None
+[layouts]
+  [[default]]
+    [[[child1]]]
+      type = Terminal
+      parent = window0
+    [[[window0]]]
+      type = Window
+      parent = ""
+  [[redes]]
+    [[[child0]]]
+      position = 0:0
+      type = Window
+      order = 0
+      parent = ""
+      size = 1920, 1028
+    [[[child1]]]
+      position = 960
+      type = HPaned
+      order = 0
+      parent = child0
+    [[[child2]]]
+      position = 514
+      type = VPaned
+      order = 0
+      parent = child1
+    [[[child3]]]
+      position = 257
+      type = VPaned
+      order = 0
+      parent = child2
+    [[[child6]]]
+      position = 254
+      type = VPaned
+      order = 1
+      parent = child2
+    [[[child9]]]
+      position = 514
+      type = VPaned
+      order = 1
+      parent = child1
+    [[[child10]]]
+      position = 257
+      type = VPaned
+      order = 0
+      parent = child9
+    [[[child13]]]
+      position = 254
+      type = VPaned
+      order = 1
+      parent = child9
+    [[[terminal11]]]
+      profile = default
+      type = Terminal
+      order = 0
+      parent = child10
+      command = java -jar CamadaAplicacao/Servidor/dist/Servidor.jar;bash
+    [[[terminal12]]]
+      profile = default
+      type = Terminal
+      order = 1
+      parent = child10
+      command = dmd -run CamadaTransporte/servidorUDP.d;bash
+    [[[terminal5]]]
+      profile = default
+      type = Terminal
+      order = 0
+      parent = child3
+      command = java -jar CamadaAplicacao/Cliente/dist/Cliente.jar;bash
+    [[[terminal4]]]
+      profile = default
+      type = Terminal
+      order = 1
+      parent = child3
+      command = dmd -run CamadaTransporte/clienteUDP.d;bash
+    [[[terminal7]]]
+      profile = default
+      type = Terminal
+      order = 0
+      parent = child6
+      command = python CamadaRede/cliente.py;bash
+    [[[terminal8]]]
+      profile = default
+      type = Terminal
+      order = 1
+      parent = child6
+      command = ruby CamadaFisica/cliente.rb;bash
+    [[[terminal15]]]
+      profile = default
+      type = Terminal
+      order = 0
+      parent = child13
+      command = python CamadaRede/servidor.py;bash
+    [[[terminal14]]]
+      profile = default
+      type = Terminal
+      order = 1
+      parent = child13
+      command = ruby CamadaFisica/servidor.rb;bash
+[plugins]

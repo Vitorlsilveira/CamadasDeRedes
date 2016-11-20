@@ -1,24 +1,48 @@
 # -*- coding: utf-8 -*-
 import fcntl
-import struct
+from struct import *
 import os
 import socket
 import sys
 import errno
 from socket import error as socket_error
-BUFFER_SIZE = 10000
+import crc16
+BUFFER_SIZE = 65535
+
+#pip install crc16
 
 while True:
     try:
         sockfisico = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # Cria o descritor do socket
+        sockfisico.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sockfisico.connect(("localhost", 9999)) # Realiza a conexão no host e porta definidos
         break
     except:
         continue
 
+def criaPacote(segmento, sourceIP, destIP):
+    versionIHL = pack("B", 45)
+    typeService = pack("B", 0)
+    totalLength = pack("H", len(segmento)+20)
+    identification = pack("H", 0)
+    flagsFragOffset = pack("H", int('0100000000000000',2))
+    ttl = pack("B", 10)
+    protocol = pack("B", 6)
+    headerChecksum = pack("H", 0)
+    if destIP == "localhost":
+        destIP = "127.0.0.1"
+    print destIP
+    sourceAdd = pack("B", int(sourceIP.split(".")[0])) + pack("B", int(sourceIP.split(".")[1])) + pack("B", int(sourceIP.split(".")[2])) + pack("B", int(sourceIP.split(".")[3]))
+    destAdd = pack("B", int(destIP.split(".")[0])) + pack("B", int(destIP.split(".")[1])) + pack("B", int(destIP.split(".")[2])) + pack("B", int(destIP.split(".")[3]))
+    header = versionIHL+typeService+totalLength+identification+flagsFragOffset+ttl+protocol+headerChecksum+sourceAdd+destAdd
+    headerChecksum = pack("H", crc16.crc16xmodem(header))
+    header = versionIHL+typeService+totalLength+identification+flagsFragOffset+ttl+protocol+headerChecksum+sourceAdd+destAdd
+    pacote = header+segmento
+    return pacote
 
 def recebe_transporte(port):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # Cria o descritor do socket
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.bind(("localhost", port)) # Associa o endereço e porta ao descritor do socket.
     sock.listen(10) # Tamanho maximo da fila de conexões pendentes
 
@@ -32,24 +56,26 @@ def recebe_transporte(port):
         segmento = con.recv(BUFFER_SIZE) # Recebe uma mensagem do tamanho BUFFER_SIZE
         if len(str(segmento)) >= 0:
             print(address[0]+" diz: " + segmento)
+            ipOrigem = get_myip_address("wlan0")
+            ipDestino = ipOrigem
+            pacote = criaPacote(segmento, ipOrigem, ipDestino)
 
-            pacote = get_myip_address() + segmento
-            
-            resposta = conecta_fisica(segmento)
+            resposta = conecta_fisica(pacote)
             print("Resposta do servidor: " + resposta)
             con.send(resposta) # Envia mensagem através do socket.
         else:
             print("Sem dados recebidos de camada de transporte: "+address[0])
         #except ValueError:
         #    print("Erro")
+    con.close()
 
-def conecta_fisica(segmento):
+def conecta_fisica(pacote):
     while True:
         try:
-            print("Mensagem enviada para fisica >>> "+ segmento)
-            sockfisico.send(segmento) # Envia uma mensagem através do socket.
+            print("Mensagem enviada para fisica >>> "+ pacote)
+            sockfisico.send(pacote) # Envia uma mensagem através do socket.
             resposta = sockfisico.recv(BUFFER_SIZE) # Recebe mensagem enviada pelo socket.
-            if len(str(segmento)) >= 0:
+            if len(str(pacote)) >= 0:
                 print("Mensagem recebida do servidor fisico: " + resposta)
                 break
             else:
@@ -61,6 +87,8 @@ def conecta_fisica(segmento):
     return resposta
 
 def calculaIPRede(ip,mask):
+    if ip == "localhost":
+        ip = "127.0.0.1"
     ipRede=""
     numIP=""
     numMask=""
@@ -97,7 +125,7 @@ def get_myip_address(ifname):
     return socket.inet_ntoa(fcntl.ioctl(
         s.fileno(),
         0x8915,  # SIOCGIFADDR
-        struct.pack('256s', ifname[:15])
+        pack('256s', ifname[:15])
     )[20:24])
 
 
