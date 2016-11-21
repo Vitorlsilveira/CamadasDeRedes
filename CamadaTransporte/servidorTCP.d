@@ -118,7 +118,7 @@ class ServidorTCP {
     char[2] pComprimentoCabecalho = cast(char[2])nativeToLittleEndian(cast(ushort)(comprimentoCabecalho));
     ushort check = checksum16(cast(char*)dados[0 .. dadoslen], cast(int)dadoslen);
     char[2] checksum = cast(char[2])nativeToLittleEndian(check);
-    segmento = to!string(pOrigem)~to!string(pDestino)~to!string(pNumeroSequencia)~to!string(pNumeroReconhecimento)~to!string(bitsControle)~to!string(pJanela)~to!string(pComprimentoCabecalho)~to!string(checksum)~to!string(dados[0..dadoslen]~"\n\r\n");
+    segmento = to!string(pOrigem)~to!string(pDestino)~to!string(pNumeroSequencia)~to!string(pNumeroReconhecimento)~to!string(bitsControle)~to!string(pJanela)~to!string(pComprimentoCabecalho)~to!string(checksum)~to!string(dados[0..dadoslen]);
     writeln("Segmento: ");
     writeln(segmento);
     writeln("Porta origem:"~to!string(portaOrigem));
@@ -153,7 +153,7 @@ class ServidorTCP {
     //writeln("comprimento cabecalho:"~to!string(comprimentoCabecalhoD));
     checksumD=cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[16..18]);
     if(tam>=19){
-      mensagemD=dados[19..tam-1];
+      mensagemD=dados[19..tam];
       mensagemE=to!string(mensagemD);
       tamanhoBufferDestinatario=tamanhoBufferDestinatario+cast(int)tam-20;
       //writeln("mensagem: ");
@@ -182,7 +182,7 @@ class ServidorTCP {
     //writeln("comprimento cabecalho:"~to!string(comprimentoCabecalhoD));
     checksumDR=cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[16..18]);
     if(tam>=19){
-      mensagemDR=dados[19..tam-1];
+      mensagemDR=dados[19..tam];
       mensagemER=to!string(mensagemD);
       tamanhoBufferDestinatarioR=tamanhoBufferDestinatarioR+cast(int)tam-20;
       //writeln("mensagem: ");

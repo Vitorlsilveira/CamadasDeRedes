@@ -54,7 +54,7 @@ public class Response{
                     Logger.getLogger(Response.class.getName()).log(Level.SEVERE, null, ex);
                 }
                 sb.append(this.content);
-		sb.append("\r\n");
+		sb.append("\n\r\n");
 		
 		return sb.toString();
 

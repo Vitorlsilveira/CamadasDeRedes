@@ -1,5 +1,6 @@
 require "readline"
 require 'socket'
+require 'digest/crc32'
 
 class Servidor
   def initialize(port)
@@ -28,18 +29,34 @@ class Servidor
 		return saida
 	end
 
+  def converteHexToBin(x)
+		saida=""
+		for i in 0..(x.size-1)
+			saida+=x[i].hex.to_s(2).rjust(x[i].size*4, '0')
+		end
+		return saida
+	end
+
   def conectaTransporte(dados)
     #tenta conectar ate conseguir
 		#puts "To esperando servidor de transporte ficar disponivel!"
+
     @sock1.puts dados;
     resposta = ""
     puts "Enviei para o servidor de transporte! Esperando resposta..."
-    while line = @sock1.gets
-      if line == "\r\n"
-				break
-			end
-      resposta += line
-    end
+    resposta=@sock1.recv(65535) 
+#    while line = @sock1.gets
+      # if line == "\r\n"
+      #   puts "break"
+			# 	break
+			# end
+#      resposta += line
+#      puts "linha"
+#      puts line
+#    end
+    puts "peguei a porra"
+    puts resposta
+    puts "larguei a porra"
     return resposta
 	end
 
@@ -81,14 +98,49 @@ class Servidor
 
           File.write("quadro_recebido.txt", data)
           resposta = conectaTransporte([data].pack("B*"))
-          puts "\nRESPOSTA - tam #{resposta.size} =\n"
+          puts "\nRESPOSTA - tam #{resposta.length} =\n"
           puts resposta
-          respostaBin = resposta.unpack('B*')
-          puts "\n\n"
+          respostaBin = resposta.unpack("B*")[0].to_s
           puts respostaBin
-          puts "\n\n"
           puts "Enviando para o cliente a resposta..."
-          client.puts respostaBin
+
+          aux=macDestino
+          macDestino=macOrigem
+          macOrigem=aux
+          puts "Mac do remetente: #{macOrigem}"
+          puts "Mac do destinatario: #{macDestino}"
+
+          #transforma os mac para binario
+          macDestinoBinario=converteHexToBin(macDestino)
+          macOrigemBinario=converteHexToBin(macOrigem)
+
+          puts "Mac do destinatario em binario: #{macDestinoBinario}"
+          puts "Mac do remetente em binario: #{macOrigemBinario}"
+
+          #usado para sincronizar o emissor ao clock do remetente
+          preambulo = "1010101010101010101010101010101010101010101010101010101010101011"
+          #tipo indica o protocolo da camada superior e deve ser formatado para binario
+          type=  converteHexToBin("0800")
+          #utilizado para deteccao de erros
+          puts "\nCRC HEX ==  #{Digest::CRC32.hexdigest("#{respostaBin}")}\n"
+          crc = converteHexToBin(Digest::CRC32.hexdigest("#{respostaBin}"))
+
+          puts "Frame ethernet:\n"
+          puts "#{preambulo}#{macDestinoBinario}#{macOrigemBinario}#{type}#{respostaBin}#{crc}"
+          puts "Tamanho do preambulo : #{preambulo.size.to_f/8}"
+          puts "Tamanho do macDestinoBinario : #{macDestinoBinario.size.to_f/8}"
+          puts "Tamanho do macOrigemBinario : #{macOrigemBinario.size.to_f/8}"
+          puts "Tamanho do type : #{type.size.to_f/8}"
+          puts "Tamanho do pacote : #{respostaBin.size.to_f/8}"
+          puts "Tamanho do crc : #{crc.size.to_f/8}"
+
+          puts "CRC = #{crc}"
+
+          #pdu da camada fisica
+          quadro = preambulo+macDestinoBinario+macOrigemBinario+type+respostaBin+crc
+          puts "\nTamanho do quadro : #{quadro.size.to_f/8}"
+          File.write("quadroResposta.txt", quadro)
+          client.puts quadro
         end
         client.close
       end

@@ -41,6 +41,17 @@ class Cliente
 	return mac
 	end
 
+	def converteBinToHex(x)
+		saida=""
+    j = 0
+    while j < x.size-1
+      #Aqui pegamos 4 bits e os convertemos para hex
+      saida+=x[j..j+3].to_i(2).to_s(16)
+      j+=4
+    end
+		return saida
+	end
+
 	def converteHexToBin(x)
 		saida=""
 		for i in 0..(x.size-1)
@@ -74,61 +85,33 @@ class Cliente
 		return tamanhoQuadroBytes
 	end
 
-	def lerPacote(dados)
-		pacote = dados.unpack("B*")[0]
-		pacote = pacote.to_s
-		puts pacote
-		puts "DADOSSSSS\n"
-		puts dados
-
-		#pega a porta do arquivo
-		#origemPorta = dados.split(";")[2].to_i
-		@origemPorta = dados[0..1].unpack("S")[0]
-		#pega a porta do arquivo
-		#destinoPorta = dados.split(";")[3].to_i
-		@destinoPorta = dados[2..3].unpack("S")[0]
-
-		#conteudo
-		@msg = dados[4..dados.size-1]
-		puts "MENSAGEM\n"
-		puts @msg
-		return pacote
-	end
 
 	def executar()
 		puts "Aguardando PDU da camada superior"
 
 		#Lendo dados da camada de cima
 		dados = ""
-		puts "Ouvindo do cliente de transporte na porta #{@port}"
+		puts "Ouvindo do cliente de rede na porta #{@port}"
 		# espera pela conexão do cliente da camada de aplicação
 
 
 		while true
 			puts "Aguardando pacote"
 			dados = ""
-			while line = @client.gets
-				if line == "\r\n"
-					break
-				end
-				dados += line
-				puts dados
-			end
+			dados=@client.recv(65535) 
 			puts dados;
 
-			pacote = lerPacote(dados)
+			pacote =dados.unpack("B*")[0].to_s
 			conectaServidor()
-			if @msg.include?"1110111"
-				tmq = pedirTMQ()
-				@client.puts tmq
-				dados = client.gets
-				pacote = lerPacote(dados)
-			end
+	#		if @msg.include?"1110111"
+	#			tmq = pedirTMQ()
+	#			@client.puts tmq
+	#			dados = client.gets
+	#			pacote = dados.unpack("B*")[0].to_s
+	#		end
 
 			puts "Ip de origem: #{@origemIP}"
 			puts "Ip do destinatario: #{@destinoIP}"
-			puts "Porta origem: #{@origemPorta}"
-			puts "Porta destino: #{@destinoPorta}"
 			puts "Dados: \n#{@msg}\n"
 
 			#pega o mac do destino
@@ -174,23 +157,23 @@ class Cliente
 			puts "\nTamanho do quadro : #{quadro.size.to_f/8}"
 
 			File.write("quadro.txt", quadro)
-
 			#Agora vamos enviar o quadro
 			@sock.puts quadro
-
 			puts "Recebendo resposta do servidor .. .. .. .. .. \n\n"
 			resp = @sock.gets
+			preambulo = resp[0..63]
+			macDestino = converteBinToHex(resp[64..111])
+			macOrigem = converteBinToHex(resp[112..159])
+			type = resp[160..175].to_i(2)
+			data = resp[176..resp.size-34]
+			crc = converteBinToHex(resp[resp.size-33..resp.size-1])
 			puts "Enviando para transporte"
-
-			puts [resp].pack('B*')
-			@client.write [resp].pack('B*')
-
+			puts [data].pack('B*')
+			@client.write [data].pack('B*')
 		end
 		@client.close
 	end
-
 end
-
 
 c=Cliente.new ("wlan0")
 c.executar()

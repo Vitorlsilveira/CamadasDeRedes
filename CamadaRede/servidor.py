@@ -8,7 +8,7 @@ import errno
 from socket import error as socket_error
 import crc16
 
-BUFFER_SIZE = 1024
+BUFFER_SIZE = 65536
 ipResposta = 0
 ipOrig=0
 while True:
@@ -72,7 +72,7 @@ def recebe_fisica(port):
 
     while True:
         pacote = con.recv(BUFFER_SIZE) # Recebe uma mensagem do tamanho BUFFER_SIZE
-        if len(str(pacote)) >= 0:
+        if len(str(pacote)) > 5:
             print(address[0]+" diz: " + pacote)
             segmento = separaPacote(pacote)
             print "Teste1"
@@ -82,9 +82,9 @@ def recebe_fisica(port):
             print("Resposta da transporte: " + resposta)
             print("RESPOSTA LEN " + str(len(resposta)))
             pacote = criaPacote(resposta, ipOrig, ipResposta)
-            print "\tPACOTE\n"
+            print "\tPACOTE"
             print pacote
-            print "\n\n"
+        #    print "\n\n"
             con.send(pacote) # Envia mensagem através do socket.
             print "Teste"
     con.close()
