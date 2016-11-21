@@ -1,11 +1,16 @@
 # -*- coding: utf-8 -*-
+import fcntl
+from struct import *
+import os
 import socket
 import sys
-import os
-from struct import *
+import errno
+from socket import error as socket_error
+import crc16
 
 BUFFER_SIZE = 1024
-
+ipResposta = 0
+ipOrig=0
 while True:
     try:
         socktransporte = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # Cria o descritor do socket
@@ -25,10 +30,34 @@ def separaPacote(pacote):
     protocol = unpack("B", pacote[9:10])[0]
     headerChecksum = unpack("H", pacote[10:12])[0]
     sourceAdd = str(unpack("B", pacote[12:13])[0])+"."+str(unpack("B", pacote[13:14])[0])+"."+str(unpack("B", pacote[14:15])[0])+"."+str(unpack("B", pacote[15:16])[0])
+    global ipResposta
+    ipResposta=sourceAdd
     destAdd = str(unpack("B", pacote[16:17])[0])+"."+str(unpack("B", pacote[17:18])[0])+"."+str(unpack("B", pacote[18:19])[0])+"."+str(unpack("B", pacote[19:20])[0])
+    global ipOrig
+    ipOrig=destAdd
     segmento = pacote[20:len(pacote)]
-    print sourceAdd
     return segmento
+
+def criaPacote(segmento, sourceIP, destIP):
+    versionIHL = pack("B", 45)
+    typeService = pack("B", 0)
+    totalLength = pack("H", len(segmento)+20)
+    identification = pack("H", 0)
+    flagsFragOffset = pack("H", int('0100000000000000',2))
+    ttl = pack("B", 10)
+    protocol = pack("B", 6)
+    headerChecksum = pack("H", 0)
+    if destIP == "localhost":
+        destIP = "127.0.0.1"
+    sourceAdd = pack("B", int(sourceIP.split(".")[0])) + pack("B", int(sourceIP.split(".")[1])) + pack("B", int(sourceIP.split(".")[2])) + pack("B", int(sourceIP.split(".")[3]))
+    destAdd = pack("B", int(destIP.split(".")[0])) + pack("B", int(destIP.split(".")[1])) + pack("B", int(destIP.split(".")[2])) + pack("B", int(destIP.split(".")[3]))
+    header = versionIHL+typeService+totalLength+identification+flagsFragOffset+ttl+protocol+headerChecksum+sourceAdd+destAdd
+    headerChecksum = pack("H", crc16.crc16xmodem(header))
+    header = versionIHL+typeService+totalLength+identification+flagsFragOffset+ttl+protocol+headerChecksum+sourceAdd+destAdd
+    pacote = header+segmento
+    print "cria Pacote"
+    print pacote
+    return pacote
 
 def recebe_fisica(port):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # Cria o descritor do socket
@@ -42,19 +71,22 @@ def recebe_fisica(port):
     print(address[0]+" Conectado...")
 
     while True:
-        #try:
         pacote = con.recv(BUFFER_SIZE) # Recebe uma mensagem do tamanho BUFFER_SIZE
         if len(str(pacote)) >= 0:
             print(address[0]+" diz: " + pacote)
             segmento = separaPacote(pacote)
+            print "Teste1"
             print("SEGMENTO = " + segmento)
+            print "teste2"
             resposta = conecta_transporte(segmento)
             print("Resposta da transporte: " + resposta)
-            con.send(resposta) # Envia mensagem através do socket.
-        else:
-            print("Sem dados recebidos de camada de transporte: "+address[0])
-        #except ValueError:
-        #    print("Erro")
+            print("RESPOSTA LEN " + str(len(resposta)))
+            pacote = criaPacote(resposta, ipOrig, ipResposta)
+            print "\tPACOTE\n"
+            print pacote
+            print "\n\n"
+            con.send(pacote) # Envia mensagem através do socket.
+            print "Teste"
     con.close()
 
 
@@ -108,6 +140,14 @@ def calculaIPRede(ip,mask):
         else:
             ipRede=ipRede+str(int(numIP)&int(numMask))
     return ipRede
+
+def get_myip_address(ifname):
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    return socket.inet_ntoa(fcntl.ioctl(
+        s.fileno(),
+        0x8915,  # SIOCGIFADDR
+        pack('256s', ifname[:15])
+    )[20:24])
 
 recebe_fisica(4444)
 ipRede=calculaIPRede("192.168.10.20","255.255.141.0")

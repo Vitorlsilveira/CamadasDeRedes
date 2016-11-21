@@ -81,7 +81,7 @@ class Servidor
 
           File.write("quadro_recebido.txt", data)
           resposta = conectaTransporte([data].pack("B*"))
-          puts "\nRESPOSTA =\n"
+          puts "\nRESPOSTA - tam #{resposta.size} =\n"
           puts resposta
           respostaBin = resposta.unpack('B*')
           puts "\n\n"
