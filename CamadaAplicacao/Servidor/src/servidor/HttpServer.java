@@ -58,7 +58,7 @@ public class HttpServer {
 
         try {
             // Cria a conexão servidora
-            serverSocket = new ServerSocket(port, 1,
+            serverSocket = new ServerSocket(port,10,
                     InetAddress.getByName(host));
         } catch (IOException e) {
             logger.log(Level.SEVERE, "Erro ao iniciar servidor!", e);

@@ -123,7 +123,7 @@ public class HttpClient {
         }
         HttpClient client = new HttpClient(ipDest, 6768, "localhost");
         try {
-            System.out.println(client.getURIRawContent("/hello.html"));
+            System.out.println(client.getURIRawContent("/imagem.jpg"));
         } catch (UnknownHostException e) {
             logger.log(Level.SEVERE, "Host desconhecido!", e);
         } catch (IOException e) {

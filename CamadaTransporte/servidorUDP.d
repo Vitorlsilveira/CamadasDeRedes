@@ -15,28 +15,22 @@ class ServidorUDP {
   string segmento;
   char[] mensagem;
   bool conectado = false;
+  bool conectado1=false;
 
   char[10000] dados;
   long dadoslen;
 
-  Socket listener, servidor;
+  Socket listener, servidor,socket;
 
   this(){
     listener = new Socket(AddressFamily.INET, SocketType.STREAM);
     listener.bind(new InternetAddress("localhost", 6768));
     listener.listen(10);
+    socket = new Socket(AddressFamily.INET,  SocketType.STREAM);
   }
 
   void enviaAplicacao(){
-    auto socket = new Socket(AddressFamily.INET,  SocketType.STREAM);
-    while(true){
-      try {
-        socket.connect(new InternetAddress("localhost", cast(ushort)portaDestino));
-        break;
-      } catch( Exception e ){
-        continue;
-      }
-    }
+    writeln("entrou no envia aplicacao");
     writeln("\nEnviando para Aplicacao \n" ~ mensagem);
     // Envia a requisicao pra aplicacao
     socket.send(mensagem);
@@ -46,7 +40,6 @@ class ServidorUDP {
     writeln(dados[0..dadoslen]);
     //encaminha resposta pra Rede
     enviaRede(dados[0..dadoslen],dadoslen);
-    //servidor.close();
   }
 
   void enviaRede(char[] dadosA, long dadoslenA){
@@ -78,12 +71,26 @@ class ServidorUDP {
     length = cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[4..6]);
     checksum = cast(ushort)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[6..8]);
 
+    if(!conectado1){
+      while(true){
+        try {
+          socket.connect(new InternetAddress("localhost", cast(ushort)portaDestino));
+          conectado1=true;
+          break;
+        } catch( Exception e ){
+          writeln(e);
+          readln();
+          continue;
+        }
+      }
+    }
+
     writeln("Segmento recebido: ");
     writeln("Porta origem = " ~ to!string(portaOrigem));
     writeln("Porta destino = " ~ to!string(portaDestino));
     writeln("Length= " ~ to!string(length));
     writeln("Checksum = " ~ to!string(checksum));
-    mensagem = dados[8..dadoslen-2];
+    mensagem = dados[8..dadoslen];
   }
 
   ushort checksum16(char* addr, int count){
