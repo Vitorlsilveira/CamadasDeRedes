@@ -69,13 +69,19 @@ def recebe_transporte(port):
     print(address[0]+" Conectado...")
 
     while True:
-        fo = open("config")
-        ipDestino = fo.readline().splitlines()[0]
-        fo.close()
         segmento = con.recv(BUFFER_SIZE) # Recebe uma mensagem do tamanho BUFFER_SIZE
         if len(str(segmento)) >= 0:
-            print(address[0]+" diz: " + segmento)
-            ipOrigem = get_myip_address("wlan0")
+            print(address[0]+" diz: \n" + segmento)
+            fil = open("config")
+            fo = fil.readlines()
+            print fo
+            ipDestino = fo[0].splitlines()[0]
+            print ipDestino
+            interface = fo[1].splitlines()[0]
+            #interface = "wlan0"
+            print interface
+            fil.close()
+            ipOrigem = get_myip_address(interface)
             pacote = criaPacote(segmento, ipOrigem, ipDestino)
 
             resposta = conecta_fisica(pacote)

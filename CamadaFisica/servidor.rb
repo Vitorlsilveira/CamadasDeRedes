@@ -44,7 +44,7 @@ class Servidor
     @sock1.puts dados;
     resposta = ""
     puts "Enviei para o servidor de transporte! Esperando resposta..."
-    resposta=@sock1.recv(65535) 
+    resposta=@sock1.recv(65535)
 #    while line = @sock1.gets
       # if line == "\r\n"
       #   puts "break"

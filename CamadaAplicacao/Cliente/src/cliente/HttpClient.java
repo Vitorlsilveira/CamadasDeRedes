@@ -3,15 +3,17 @@ package cliente;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileReader;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.io.Writer;
 import java.net.ConnectException;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -62,16 +64,16 @@ public class HttpClient {
         Socket clientSocket = null;
         try {
             // Abre a conexão
-            while(true) {
+            while (true) {
                 try {
                     clientSocket = new Socket("localhost", 3333);
                     break;
-                } catch(ConnectException ex) {
+                } catch (ConnectException ex) {
                 }
             }
-            
+
             PrintWriter outToServer = new PrintWriter(clientSocket.getOutputStream(), true);
-            
+
             //DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
             BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 
@@ -81,11 +83,14 @@ public class HttpClient {
             req += "GET " + path + " " + HTTP_VERSION + "\n";
             req += "Host: " + this.host + "\n";
             req += "Connection: Close;";
-            
+
             escritor("requisicaoEmTextoCA.txt", req);
+            System.out.println("Inicio REQ + " + req.length());
+            System.out.println(req);
+            System.out.println("Fim REQ");
             //System.out.println("Pacote: \n\n" + req + "\n\n" + reqBin + "\n\n");
             outToServer.println(req);
-            
+
             StringBuilder sb = new StringBuilder();
             // recupera a resposta quando ela estiver disponível
             while (true) {
@@ -104,7 +109,7 @@ public class HttpClient {
             }
         }
     }
-    
+
     private static void escritor(String path, String dados) throws IOException {
         BufferedWriter buffWrite = new BufferedWriter(new FileWriter(path));
         buffWrite.append(dados + "\n");
@@ -114,16 +119,20 @@ public class HttpClient {
     public static void main(String[] args) {
         File f = new File("config");
         BufferedReader br;
-        String ipDest = "127.0.0.1";
+        Scanner s = new Scanner(System.in);
+        System.out.println("Digite o IP de destino:");
+        String ipDest = s.nextLine();
+        System.out.println("Digite a interface utilizada:");
+        String interf = s.nextLine();
         try {
-            br = new BufferedReader(new FileReader(f));
-            ipDest = br.readLine();
+            escritor("config", ipDest+"\n"+interf);
         } catch (IOException ex) {
             Logger.getLogger(HttpClient.class.getName()).log(Level.SEVERE, null, ex);
         }
         HttpClient client = new HttpClient(ipDest, 6768, "localhost");
         try {
-            System.out.println(client.getURIRawContent("/imagem.jpg"));
+            System.out.println("Digite o arquivo requerido:");
+            System.out.println(client.getURIRawContent("/" + s.nextLine()));
         } catch (UnknownHostException e) {
             logger.log(Level.SEVERE, "Host desconhecido!", e);
         } catch (IOException e) {

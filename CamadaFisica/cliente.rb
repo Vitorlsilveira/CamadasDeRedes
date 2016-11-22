@@ -4,14 +4,15 @@ require 'socket'
 
 
 class Cliente
-	def initialize(interface)
-		@interface=interface
+	def initialize()
+		file = File.open("config", 'r')
 		@server=TCPServer.open(9999)
 		@port=9999
 		#pega o IP do arquivo
 		@origemIP = "localhost"
 		#pega o IP do arquivo
-		@destinoIP = File.open("config", 'r').gets
+		@destinoIP=file.gets
+		@interface=file.gets
 		@msg = ""
 		@client=@server.accept
 		@origemPorta = ""
@@ -98,7 +99,7 @@ class Cliente
 		while true
 			puts "Aguardando pacote"
 			dados = ""
-			dados=@client.recv(65535) 
+			dados=@client.recv(65535)
 			puts dados;
 
 			pacote =dados.unpack("B*")[0].to_s
@@ -175,5 +176,5 @@ class Cliente
 	end
 end
 
-c=Cliente.new ("wlan0")
+c=Cliente.new
 c.executar()

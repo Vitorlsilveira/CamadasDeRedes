@@ -26,7 +26,7 @@ class ClienteUDP {
 
   void recebeAplicacao(){
     cliente = listener.accept();
-    dadoslen = cliente.receive(dados);
+    dadoslen = cliente.receive(dados)-1;
     writeln("QNT = " ~ to!string(dadoslen));
     writeln(dados[0 .. dadoslen]);
   }
@@ -82,7 +82,7 @@ class ClienteUDP {
     char[2] pLength = cast(char[2])nativeToLittleEndian(cast(ushort)(dadoslenA+8));
     ushort check = checksum16(cast(char*)dadosA[0 .. dadoslenA], cast(int)dadoslenA);
     char[2] pChecksum = cast(char[2])nativeToLittleEndian(check);
-    segmento = to!string(pOrigem)~to!string(pDestino)~to!string(pLength)~to!string(pChecksum)~to!string(dadosA[0 .. dadoslenA]~"\n\r\n");
+    segmento = to!string(pOrigem)~to!string(pDestino)~to!string(pLength)~to!string(pChecksum)~to!string(dadosA[0 .. dadoslenA]);
     writeln("Segmento enviado: ");
     writeln(segmento);
     writeln("Porta origem = " ~ to!string(portaOrigem));
