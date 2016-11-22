@@ -155,7 +155,7 @@ class ServidorTCP {
     if(tam>=19){
       mensagemD=dados[19..tam];
       mensagemE=to!string(mensagemD);
-      tamanhoBufferDestinatario=tamanhoBufferDestinatario+cast(int)tam-20;
+      tamanhoBufferDestinatario=tamanhoBufferDestinatario+cast(int)tam-19;
       //writeln("mensagem: ");
       //writeln(mensagemE);
     }
@@ -184,7 +184,7 @@ class ServidorTCP {
     if(tam>=19){
       mensagemDR=dados[19..tam];
       mensagemER=to!string(mensagemD);
-      tamanhoBufferDestinatarioR=tamanhoBufferDestinatarioR+cast(int)tam-20;
+      tamanhoBufferDestinatarioR=tamanhoBufferDestinatarioR+cast(int)tam-19;
       //writeln("mensagem: ");
       //writeln(mensagemER);
     }
@@ -216,8 +216,10 @@ class ServidorTCP {
       dadoslenR = servidor.receive(dadosR);
       writeln(dadosR[0..dadoslenR]);
       separaSegmento(cast(char*)dadosR,dadoslenR);
+      writeln("Pacote len = " ~ to!string(dadoslenR));
       writeln("Recebi segmento: " ~ to!string(numeroSequenciaD));
       bufferDestinatario = bufferDestinatario ~ mensagemE;
+      writeln("Buffer destinatário\n " ~bufferDestinatario);
       portaOrigem=portaDestinoD;
       portaDestino=portaOrigemD;
       janela=janelaD;
@@ -357,7 +359,7 @@ class ServidorTCP {
 }
 
 void main() {
-  auto servidor = new ServidorTCP(28);
+  auto servidor = new ServidorTCP(38);
   while(true) {
     servidor.recebeRede();
   }

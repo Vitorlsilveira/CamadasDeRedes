@@ -41,7 +41,7 @@ class Servidor
     #tenta conectar ate conseguir
 		#puts "To esperando servidor de transporte ficar disponivel!"
 
-    @sock1.puts dados;
+    @sock1.write dados+"\n";
     resposta = ""
     puts "Enviei para o servidor de transporte! Esperando resposta..."
     resposta=@sock1.recv(65535)
@@ -93,6 +93,7 @@ class Servidor
       		puts "Mac Origem : #{macOrigem}"
       		puts "Type : #{type}"
       		puts "Pacote : #{[data].pack("B*")}"
+          puts "Pacote size = #{[data].pack("B*").size}"
       		puts "Crc : #{crc}"
           puts "\n\n"
 

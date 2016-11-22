@@ -21,6 +21,7 @@ while True:
         continue
 
 def separaPacote(pacote):
+    print "pacote len = " + str(len(pacote))
     versionIHL = unpack("B", pacote[0:1])[0]
     typeService = unpack("B", pacote[1:2])[0]
     totalLength = unpack("H", pacote[2:4])[0]
@@ -35,7 +36,7 @@ def separaPacote(pacote):
     destAdd = str(unpack("B", pacote[16:17])[0])+"."+str(unpack("B", pacote[17:18])[0])+"."+str(unpack("B", pacote[18:19])[0])+"."+str(unpack("B", pacote[19:20])[0])
     global ipOrig
     ipOrig=destAdd
-    segmento = pacote[20:len(pacote)]
+    segmento = pacote[20:len(pacote)-1]
     return segmento
 
 def criaPacote(segmento, sourceIP, destIP):

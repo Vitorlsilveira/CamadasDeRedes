@@ -157,8 +157,8 @@ class ClienteTCP {
     dadoslenR = socket.receive(dadosR);
     separaSegmento(cast(char*)dadosR,dadoslenR);
     numeroReconhecimento=numeroSequenciaD+1;
-    if(numSegmentos>0){
-        while(i<numSegmentos-1){
+    if(numSegmentos>=0){
+        while(i<numSegmentos){
           codifica("00010000");
           writeln("Enviei segmento: " ~ to!string(numeroSequencia));
           criaSegmento(portaOrigem,portaDestino,janela,18,numeroSequencia,numeroReconhecimento,bitsControle,cast(char*)dadosA[aux..fimParcial],tamDados);

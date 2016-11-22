@@ -170,7 +170,7 @@ class Cliente
 			crc = converteBinToHex(resp[resp.size-33..resp.size-1])
 			puts "Enviando para transporte"
 			puts [data].pack('B*')
-			@client.write [data].pack('B*')
+			@client.write [data].pack('B*')+"\n"
 		end
 		@client.close
 	end
