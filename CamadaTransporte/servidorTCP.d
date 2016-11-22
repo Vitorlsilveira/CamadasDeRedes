@@ -134,30 +134,19 @@ class ServidorTCP {
 
   void separaSegmento(char *dados,long tam){
     portaOrigemD = cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[0..2]);
-//  writeln("Porta origem:"~to!string(portaOrigemD));
     portaDestinoD = cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[2..4]);
-  //  writeln("Porta destino:"~to!string(portaDestinoD));
     numeroSequenciaD=cast(int)littleEndianToNative!(uint,4)(cast(ubyte[4])dados[4..8]);
-    //writeln("sequencia:"~to!string(numeroSequenciaD));
     numeroReconhecimentoD=cast(int)littleEndianToNative!(uint,4)(cast(ubyte[4])dados[8..12]);
-    //writeln("reconhecimento:"~to!string(numeroReconhecimentoD));
     bitsControleD=cast(char)littleEndianToNative!(byte,1)(cast(ubyte[1])dados[12..13]);
     decodifica(bitsControleD);
     vetorControle=cast(char[])retornoControle;
-    //writeln("flag de ultimo segmento:");
-    //writeln(vetorControle[1]);
-    //writeln("bits controle:"~retornoControle);
     janelaD=cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[13..15]);
-    //writeln("janela:"~to!string(janelaD));
     comprimentoCabecalhoD=cast(int)littleEndianToNative!(byte,1)(cast(ubyte[1])dados[15..16]);
-    //writeln("comprimento cabecalho:"~to!string(comprimentoCabecalhoD));
     checksumD=cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[16..18]);
     if(tam>=19){
       mensagemD=dados[19..tam];
       mensagemE=to!string(mensagemD);
       tamanhoBufferDestinatario=tamanhoBufferDestinatario+cast(int)tam-19;
-      //writeln("mensagem: ");
-      //writeln(mensagemE);
     }
   }
 
@@ -199,6 +188,11 @@ class ServidorTCP {
     int count=0;
     janelaD=1;
     numeroSequencia=uniform(0,100);
+    mensagem=[];
+    bufferDestinatario="";
+    bufferDestinatarioR="";
+    mensagemE="";
+    mensagemER="";
 
     /*Estabelecimento de conexão de 3 vias - handshake*/
     dadoslenR = servidor.receive(dadosR);
@@ -298,7 +292,7 @@ class ServidorTCP {
           int aux2=aux+cast(int)restoDivisao;
           codifica("01010000");
           writeln("Enviei segmento: " ~ to!string(numeroSequenciaR));
-          criaSegmento(portaOrigem,portaDestino,janelaR,18,numeroSequenciaR,numeroReconhecimentoR,bitsControle,cast(char*)dadosA[aux..aux2],restoDivisao);
+          criaSegmento(portaOrigem,portaDestino,janelaR,18,numeroSequenciaR,numeroReconhecimentoR,bitsControle,cast(char*)dadosA[aux..aux+restoDivisao],restoDivisao);
           servidor.send(segmento);
         }
         aux=0;

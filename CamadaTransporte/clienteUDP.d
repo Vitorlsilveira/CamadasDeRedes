@@ -74,6 +74,7 @@ class ClienteUDP {
     writeln("Length= " ~ to!string(length));
     writeln("Checksum = " ~ to!string(checksum));
     mensagem = dados[8..dadoslen];
+    writeln("Dados = " ~to!string(mensagem));
   }
 
   void enviaRede(char[] dadosA, long dadoslenA){

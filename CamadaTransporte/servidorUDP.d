@@ -36,6 +36,7 @@ class ServidorUDP {
     socket.send(mensagem);
     //recebe resposta
     dadoslen = socket.receive(dados);
+    writeln("tam dados recebidos: "~to!string(dadoslen));    
     writeln("recebi da aplicação:");
     writeln(dados[0..dadoslen]);
     //encaminha resposta pra Rede
@@ -65,6 +66,9 @@ class ServidorUDP {
       servidor = listener.accept();
       conectado = true;
     }
+    segmento="";
+    mensagem=[];
+    dadoslen=0;
     dadoslen = servidor.receive(dados);
     portaOrigem = cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[0..2]);
     portaDestino = cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[2..4]);
