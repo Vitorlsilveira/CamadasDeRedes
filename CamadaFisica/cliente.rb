@@ -103,6 +103,7 @@ class Cliente
 			puts dados;
 
 			pacote =dados.unpack("B*")[0].to_s
+			File.open("CamadaRede/nexthop1", 'r').gets.chomp
 			conectaServidor()
 	#		if @msg.include?"1110111"
 	#			tmq = pedirTMQ()

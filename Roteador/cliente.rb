@@ -103,13 +103,8 @@ class Cliente
 			puts dados;
 
 			pacote =dados.unpack("B*")[0].to_s
+			@destinoIP=	File.open("Roteador/nexthop", 'r').gets.chomp
 			conectaServidor()
-	#		if @msg.include?"1110111"
-	#			tmq = pedirTMQ()
-	#			@client.puts tmq
-	#			dados = client.gets
-	#			pacote = dados.unpack("B*")[0].to_s
-	#		end
 
 			puts "Ip de origem: #{@origemIP}"
 			puts "Ip do destinatario: #{@destinoIP}"

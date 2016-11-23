@@ -155,7 +155,7 @@ public class HttpClient {
         Scanner s = new Scanner(System.in);
         System.out.println("Digite o IP de destino:");
         //String ipDest = s.nextLine();
-        String ipDest = "192.168.0.34";
+        String ipDest = "192.168.0.101";
         System.out.println("Digite a interface utilizada:");
         //String interf = s.nextLine();
         String interf = "wlan0";

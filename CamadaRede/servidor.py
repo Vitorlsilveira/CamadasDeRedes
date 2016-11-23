@@ -86,6 +86,7 @@ def recebe_fisica(port):
             print "\tPACOTE"
             print pacote
         #    print "\n\n"
+            define_nextHop()
             con.send(pacote) # Envia mensagem através do socket.
             print "Teste"
     con.close()
@@ -108,7 +109,23 @@ def conecta_transporte(segmento):
                 raise serr
     return resposta
 
-
+def define_nextHop():
+    tabela = open("CamadaRede/tabela2", 'r')
+    for linha in tabela:
+        linha=linha.strip().split(" ")
+        ipDeRede=linha[0]
+        mascara=linha[1]
+        nextHop=linha[2]
+        if ipDeRede == calculaIPRede(ipResposta,mascara):
+            print("ip de rede:"+ipDeRede)
+            print ("calculo do ip de rede: "+calculaIPRede(ipResposta,mascara))
+            print("next Hop:"+nextHop)
+            arquivo=open("CamadaRede/nexthop2","w")
+            arquivo.write(nextHop)
+            arquivo.close
+            return
+    print "Pacote descartado, arrume a tabela de roteamento da camada de rede"
+    return
 
 def calculaIPRede(ip,mask):
     ipRede=""

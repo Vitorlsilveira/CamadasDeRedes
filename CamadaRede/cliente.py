@@ -10,7 +10,7 @@ import crc16
 BUFFER_SIZE = 65536
 
 #pip install crc16
-
+ipDestino=0
 while True:
     try:
         sockfisico = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # Cria o descritor do socket
@@ -74,6 +74,7 @@ def recebe_transporte(port):
             print(address[0]+" diz: \n" + segmento)
             fil = open("config")
             fo = fil.readlines()
+            global ipDestino
             ipDestino = fo[0].splitlines()[0]
             interface = fo[1].splitlines()[0]
             fil.close()
@@ -90,6 +91,7 @@ def recebe_transporte(port):
 def conecta_fisica(pacote):
     while True:
         try:
+            define_nextHop()
             print("Mensagem enviada para fisica >>> "+ pacote)
             sockfisico.send(pacote) # Envia uma mensagem através do socket.
             resposta = sockfisico.recv(BUFFER_SIZE) # Recebe mensagem enviada pelo socket.
@@ -103,9 +105,30 @@ def conecta_fisica(pacote):
                 raise serr
     return segmento
 
+def define_nextHop():
+    tabela = open("CamadaRede/tabela1", 'r')
+    for linha in tabela:
+        print "entrou"
+        linha=linha.strip().split(" ")
+        ipDeRede=linha[0]
+        mascara=linha[1]
+        nextHop=linha[2]
+        print ipDeRede
+        print mascara
+        print nextHop
+        print "ip destino"+ipDestino
+        if ipDeRede == calculaIPRede(ipDestino,mascara):
+            print("ip de rede:"+ipDeRede)
+            print ("calculo do ip de rede: "+calculaIPRede(ipDestino,mascara))
+            print("next Hop:"+nextHop)
+            arquivo=open("CamadaRede/nexthop1","w")
+            arquivo.write(nextHop)
+            arquivo.close
+            return
+    print "Pacote descartado, arrume a tabela de roteamento da camada de rede"
+    return
+
 def calculaIPRede(ip,mask):
-    if ip == "localhost":
-        ip = "127.0.0.1"
     ipRede=""
     numIP=""
     numMask=""
@@ -135,7 +158,7 @@ def calculaIPRede(ip,mask):
             ipRede=ipRede+str(int(numIP)&int(numMask))+"."
         else:
             ipRede=ipRede+str(int(numIP)&int(numMask))
-        return ipRede
+    return ipRede
 
 def get_myip_address(ifname):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
