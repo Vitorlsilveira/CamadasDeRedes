@@ -35,7 +35,7 @@ def separaPacote(pacote):
     headerChecksum = unpack("H", pacote[10:12])[0]
     sourceAdd = str(unpack("B", pacote[12:13])[0])+"."+str(unpack("B", pacote[13:14])[0])+"."+str(unpack("B", pacote[14:15])[0])+"."+str(unpack("B", pacote[15:16])[0])
     destAdd = str(unpack("B", pacote[16:17])[0])+"."+str(unpack("B", pacote[17:18])[0])+"."+str(unpack("B", pacote[18:19])[0])+"."+str(unpack("B", pacote[19:20])[0])
-    segmento = pacote[20:len(pacote)-1]
+    segmento = pacote[20:len(pacote)-2]
     return segmento
 
 def criaPacote(segmento, sourceIP, destIP):

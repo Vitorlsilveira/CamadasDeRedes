@@ -5,9 +5,9 @@ require 'socket'
 
 class Cliente
 	def initialize()
-		file = File.open("config", 'r')
-		@server=TCPServer.open(9999)
-		@port=9999
+		file = File.open("Roteador/config", 'r')
+		@server=TCPServer.open(2222)
+		@port=2222
 		#pega o IP do arquivo
 		@origemIP = "localhost"
 		#pega o IP do arquivo
@@ -64,11 +64,11 @@ class Cliente
 
 	def conectaServidor()
 		#tenta conectar ate conseguir
-		puts "Aguardando roteador ficar disponivel na porta 5553!"
+		puts "Aguardando servidor ficar disponivel na porta 5554!"
 		@sock = 0
 		while @sock==0
       begin
-			@sock = TCPSocket.open(@destinoIP, 5553)
+			@sock = TCPSocket.open(@destinoIP, 5554)
 			rescue
 				@sock=0
         sleep 1

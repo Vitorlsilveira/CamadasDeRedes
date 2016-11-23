@@ -36,7 +36,7 @@ def separaPacote(pacote):
     destAdd = str(unpack("B", pacote[16:17])[0])+"."+str(unpack("B", pacote[17:18])[0])+"."+str(unpack("B", pacote[18:19])[0])+"."+str(unpack("B", pacote[19:20])[0])
     global ipOrig
     ipOrig=destAdd
-    segmento = pacote[20:len(pacote)-1]
+    segmento = pacote[20:len(pacote)-2]
     return segmento
 
 def criaPacote(segmento, sourceIP, destIP):
