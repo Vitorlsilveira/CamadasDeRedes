@@ -1,3 +1,3 @@
-GET /hello.html HTTP/1.1
-Host: 192.168.0.101
+GET /imagem.jpg HTTP/1.1
+Host: 192.168.0.107
 Connection: Close;

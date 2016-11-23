@@ -7,7 +7,7 @@ import sys
 import errno
 from socket import error as socket_error
 import crc16
-BUFFER_SIZE = 65535
+BUFFER_SIZE = 65536
 
 #pip install crc16
 

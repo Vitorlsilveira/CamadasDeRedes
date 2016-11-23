@@ -18,8 +18,8 @@ class ClienteTCP {
   char bitsControle;
   string retornoControle;
   char[] mensagem;
-  char[10000] dados;
-  char[10000] dadosR;
+  char[65536] dados;
+  char[65536] dadosR;
   long dadoslenR;
   long dadoslen;
   char[] vetorControle;

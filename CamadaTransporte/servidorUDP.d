@@ -15,9 +15,8 @@ class ServidorUDP {
   string segmento;
   char[] mensagem;
   bool conectado = false;
-  bool conectado1=false;
 
-  char[10000] dados;
+  char[65536] dados;
   long dadoslen;
 
   Socket listener, servidor,socket;
@@ -29,6 +28,10 @@ class ServidorUDP {
     socket = new Socket(AddressFamily.INET,  SocketType.STREAM);
   }
 
+  void aceitaConexao(){
+    servidor = listener.accept();
+  }
+
   void enviaAplicacao(){
     writeln("entrou no envia aplicacao");
     writeln("\nEnviando para Aplicacao \n" ~ mensagem);
@@ -36,7 +39,7 @@ class ServidorUDP {
     socket.send(mensagem);
     //recebe resposta
     dadoslen = socket.receive(dados);
-    writeln("tam dados recebidos: "~to!string(dadoslen));    
+    writeln("tam dados recebidos: "~to!string(dadoslen));
     writeln("recebi da aplicação:");
     writeln(dados[0..dadoslen]);
     //encaminha resposta pra Rede
@@ -62,10 +65,6 @@ class ServidorUDP {
 
 
   void recebeRede(){
-    if(!conectado){
-      servidor = listener.accept();
-      conectado = true;
-    }
     segmento="";
     mensagem=[];
     dadoslen=0;
@@ -75,15 +74,13 @@ class ServidorUDP {
     length = cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[4..6]);
     checksum = cast(ushort)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[6..8]);
 
-    if(!conectado1){
+    if(!conectado){
       while(true){
         try {
           socket.connect(new InternetAddress("localhost", cast(ushort)portaDestino));
-          conectado1=true;
+          conectado=true;
           break;
         } catch( Exception e ){
-          writeln(e);
-          readln();
           continue;
         }
       }
@@ -120,6 +117,7 @@ class ServidorUDP {
 
 void main() {
   auto servidor = new ServidorUDP();
+  servidor.aceitaConexao();
   while(true) {
     servidor.recebeRede();
     servidor.enviaAplicacao();

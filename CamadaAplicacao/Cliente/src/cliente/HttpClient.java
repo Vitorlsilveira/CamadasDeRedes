@@ -1,21 +1,24 @@
 package cliente;
 
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.io.Writer;
 import java.net.ConnectException;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.imageio.ImageIO;
 
 /**
  * Cliente HTTP simples para somente requisições GET
@@ -94,6 +97,7 @@ public class HttpClient {
             StringBuilder sb = new StringBuilder();
             // recupera a resposta quando ela estiver disponível
             while (true) {
+                int a = 0;
                 if (inFromServer.ready()) {
                     int i = 0;
                     while (inFromServer.ready() && (i = inFromServer.read()) != -1) {
@@ -102,11 +106,40 @@ public class HttpClient {
                     break;
                 }
             }
+            String response = sb.toString();
+            String[] split = response.split("\r\n\r\n", 2);
+            salvarImagem(path, split[1]);
             return sb.toString();
         } finally {
             if (clientSocket != null) {
                 clientSocket.close();
             }
+        }
+    }
+
+    private void salvarImagem(String path, String imagem) throws IOException {
+        byte[] buffer = imagem.getBytes(StandardCharsets.UTF_8);
+        if (path.contains(".jpg")) {
+            System.out.println(buffer.length);
+            /*ByteArrayInputStream in = new ByteArrayInputStream(buffer);
+            BufferedImage bImageFromConvert = ImageIO.read(in);
+            System.out.println(bImageFromConvert);
+            ImageIO.write(bImageFromConvert, "jpg", new File("saida"));*/
+            ByteToImage(buffer);
+        }
+    }
+
+    public void ByteToImage(byte[] bytes) {
+        byte[] imgBytes = bytes;
+        try {
+            FileOutputStream fos = new FileOutputStream("saida.jpg");
+            fos.write(imgBytes);
+            FileDescriptor fd = fos.getFD();
+            fos.flush();
+            fd.sync();
+            fos.close();
+        } catch (Exception e) {
+            System.out.println(e);
         }
     }
 
@@ -121,11 +154,13 @@ public class HttpClient {
         BufferedReader br;
         Scanner s = new Scanner(System.in);
         System.out.println("Digite o IP de destino:");
-        String ipDest = s.nextLine();
+        //String ipDest = s.nextLine();
+        String ipDest = "192.168.0.107";
         System.out.println("Digite a interface utilizada:");
-        String interf = s.nextLine();
+        //String interf = s.nextLine();
+        String interf = "wlan0";
         try {
-            escritor("config", ipDest+"\n"+interf);
+            escritor("config", ipDest + "\n" + interf);
         } catch (IOException ex) {
             Logger.getLogger(HttpClient.class.getName()).log(Level.SEVERE, null, ex);
         }

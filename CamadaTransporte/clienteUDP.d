@@ -12,7 +12,7 @@ class ClienteUDP {
   int length;
   ushort checksum;
 
-  char[10000] dados;
+  char[65536] dados;
   long dadoslen;
 
   Socket listener, cliente, socket;

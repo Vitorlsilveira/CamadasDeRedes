@@ -99,7 +99,7 @@ class Cliente
 		while true
 			puts "Aguardando pacote"
 			dados = ""
-			dados=@client.recv(65535)
+			dados=@client.recv(65536)
 			puts dados;
 
 			pacote =dados.unpack("B*")[0].to_s

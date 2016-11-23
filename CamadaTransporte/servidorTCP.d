@@ -23,9 +23,9 @@ class ServidorTCP {
   long dadoslenR;
   ushort checksum;
   string segmento;
-  char[10000] dados;
-  char[10000] dadosA;
-  char[10000] dadosR;
+  char[65536] dados;
+  char[65536] dadosA;
+  char[65536] dadosR;
   char[] mensagem;
   char[] vetorControle;
   int portaOrigemD,portaOrigemDR;

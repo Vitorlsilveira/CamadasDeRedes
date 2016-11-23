@@ -58,7 +58,7 @@ public class HttpServer {
 
         try {
             // Cria a conexão servidora
-            serverSocket = new ServerSocket(port,10,
+            serverSocket = new ServerSocket(port, 10,
                     InetAddress.getByName(host));
         } catch (IOException e) {
             logger.log(Level.SEVERE, "Erro ao iniciar servidor!", e);
@@ -76,35 +76,48 @@ public class HttpServer {
             try {
                 socket = serverSocket.accept();
                 System.out.println("Aceitou conexão com o servidor da camada fisica");
-                input = socket.getInputStream();
-                output = socket.getOutputStream();
+                while (true) {
+                    try {
+                        input = socket.getInputStream();
+                        output = socket.getOutputStream();
 
-                // Realiza o parse da requisição recebida
-                String requestString = convertStreamToString(input);
-                String saida = requestString;
-                /*System.out.println("Conexão recebida. Conteúdo em binário:\n" + requestString);
-                System.out.println("Conexão recebida. Conteúdo em texto:\n\n" + saida + "\n\n");*/
-                System.out.println("Conteudo recebido: \n\n "+ saida + "\n\n" + requestString + "\n\n" );
-                escritor("pacote_recebido.txt", requestString);
-                //escritor("respostaDaFisicaEmTextoSA.txt",saida);                                
-                Request request = new Request();
-                request.parse(saida);
-                
-                // recupera a resposta de acordo com a requisicao
-                Response response = new Response(request);
-                String responseString = response.respond();
-                System.out.println("Resposta enviada. Conteúdo:\n" + responseString);
-                escritor("resposta.txt",responseString);
-                
-                output.write(responseString.getBytes());
-                 
-                // Fecha a conexão
-                socket.close();
+                        // Realiza o parse da requisição recebida
+                        String requestString = convertStreamToString(input);
+                        String saida = requestString;
+                        /*System.out.println("Conexão recebida. Conteúdo em binário:\n" + requestString);
+                         System.out.println("Conexão recebida. Conteúdo em texto:\n\n" + saida + "\n\n");*/
+                        System.out.println("Conteudo recebido: \n\n " + saida + "\n\n" + requestString + "\n\n");
+                        escritor("pacote_recebido.txt", requestString);
+                        //escritor("respostaDaFisicaEmTextoSA.txt",saida);                                
+                        Request request = new Request();
+                        request.parse(saida);
 
+                        // recupera a resposta de acordo com a requisicao
+                        Response response = new Response(request);
+                        String responseString = response.respond();
+                        System.out.println("Resposta enviada. Conteúdo:\n" + responseString);
+                        escritor("resposta.txt", responseString);
+
+                        output.write(responseString.getBytes());
+                    } catch (IndexOutOfBoundsException e) {
+                        break;
+                    }
+                    // Fecha a conexão
+                }
+                //socket.close();
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "Erro ao executar servidor!", e);
                 continue;
+            } finally {
+                try {
+                    if (socket != null) {
+                        socket.close();
+                    }
+                } catch (IOException ex) {
+                    Logger.getLogger(HttpServer.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
+
         }
     }
 
@@ -115,11 +128,10 @@ public class HttpServer {
     }
 
     private String convertStreamToString(InputStream is) {
-
         if (is != null) {
             Writer writer = new StringWriter();
 
-            char[] buffer = new char[2048];
+            char[] buffer = new char[65536];
             try {
                 Reader reader = new BufferedReader(new InputStreamReader(is));
                 int i = reader.read(buffer);
@@ -129,11 +141,9 @@ public class HttpServer {
                 return "";
             }
             return writer.toString();
-        } else {
-            return "";
         }
+        return "";
     }
-
 
     public static void main(String[] args) {
         //Scanner reader = new Scanner(System.in);  
