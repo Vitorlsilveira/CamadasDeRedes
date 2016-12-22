@@ -20,57 +20,34 @@ public class Request {
 	public Request() {
 	}
 
-	/**
-	 * Realiza o parse
-	 * 
-	 * @param input
-	 * @return
-	 * @throws IOException
-	 */
+	//realiza o parse da requisição recebida
 	public void parse(String input) throws IOException {
 		BufferedReader br = new BufferedReader(new StringReader(input));
 		String line = null;
-		int lineNumber = 0;
-		while ((line = br.readLine()) != null) {
-			System.out.println(lineNumber + " " + line);
-			if (lineNumber == 0) {
-				String[] values = line.split(" ");
-				if (values.length == 3) { 
-					this.method = values[0];
-					this.uri = values[1];
-					this.protocol = values[2];
-				}// TODO Tratar erro
-			} else {
-				// TODO Recuperar os cabeçalhos e corpo
-			}
-			lineNumber++;
-
-		}
+                line = br.readLine();
+                if(line != null){
+                    //divide string com base no espaço em branco
+                    String[] values = line.split(" ");
+                    if (values.length == 3) { 
+                        //captura o metodo,a url e o protocolo
+			this.method = values[0];
+			this.uri = values[1];
+                        this.protocol = values[2];
+                    }  
+                }
 	}
 
-	/**
-	 * Recupera o método
-	 * 
-	 * @return metodo TODO: Converter para Enum
-	 */
+	//retorna o method
 	public String getMethod() {
 		return method;
 	}
 
-	/**
-	 * Recupera a URI
-	 * 
-	 * @return uri
-	 */
+	//retorna a uri
 	public String getUri() {
 		return uri;
 	}
 
-	/**
-	 * Recupera o protocolo
-	 * 
-	 * @return TODO: Fazer validação
-	 */
+	//retorna o protocolo
 	public String getProtocol() {
 		return protocol;
 	}

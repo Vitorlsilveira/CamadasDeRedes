@@ -45,6 +45,7 @@ class ServidorTCP {
   Socket listener, servidor, socket;
 
   this(int MSS){
+    //cria socket para que a camada de rde se conecte a camada de transporte na porta 6768
     listener = new Socket(AddressFamily.INET, SocketType.STREAM);
     listener.bind(new InternetAddress("localhost", 6768));
     listener.listen(10);
@@ -52,6 +53,7 @@ class ServidorTCP {
     this.MSS=MSS;
   }
 
+//codifica bits de controle
   void codifica(string controle){
       if(controle=="00000010")
       {
@@ -80,6 +82,7 @@ class ServidorTCP {
       }
 }
 
+//decodificador dos bits de controle
  void decodifica(char controle){
        if(controle=='I')
        {
@@ -109,84 +112,100 @@ class ServidorTCP {
   }
 
 
-  void criaSegmento(int portaOrigem,int portaDestino,int janela,int comprimentoCabecalho,int numeroSequencia,int numeroReconhecimento,char bitsControle,char *dados,long dadoslen){
-    char[2] pOrigem = cast(char[2])nativeToLittleEndian(cast(ushort)portaOrigem);
-    char[2] pDestino = cast(char[2])nativeToLittleEndian(cast(ushort)portaDestino);
-    char[2] pJanela = cast(char[2])nativeToLittleEndian(cast(ushort)janela);
-    char[4] pNumeroSequencia = cast(char[4])nativeToLittleEndian(cast(uint)numeroSequencia);
-    char[4] pNumeroReconhecimento = cast(char[4])nativeToLittleEndian(cast(uint)(numeroReconhecimento));
-    char[2] pComprimentoCabecalho = cast(char[2])nativeToLittleEndian(cast(ushort)(comprimentoCabecalho));
-    ushort check = checksum16(cast(char*)dados[0 .. dadoslen], cast(int)dadoslen);
-    char[2] checksum = cast(char[2])nativeToLittleEndian(check);
-    segmento = to!string(pOrigem)~to!string(pDestino)~to!string(pNumeroSequencia)~to!string(pNumeroReconhecimento)~to!string(bitsControle)~to!string(pJanela)~to!string(pComprimentoCabecalho)~to!string(checksum)~to!string(dados[0..dadoslen]);
-    writeln("Segmento: ");
-    writeln(segmento);
-    writeln("Porta origem:"~to!string(portaOrigem));
-    writeln("Porta destino:"~to!string(portaDestino));
-    writeln("sequencia:"~to!string(numeroSequencia));
-    writeln("reconhecimento:"~to!string(numeroReconhecimento));
-    writeln("bits controle:"~to!string(bitsControle));
-    writeln("janela:"~to!string(janela));
-    writeln("comprimento cabecalho:"~to!string(comprimentoCabecalho));
-    writeln("checksum:"~to!string(checksum));
-    writeln("dados:"~to!string(dados[0..dadoslen]));
-  }
-
+  //cria segmento
+    void criaSegmento(int portaOrigem,int portaDestino,int janela,int comprimentoCabecalho,int numeroSequencia,int numeroReconhecimento,char bitsControle,char *dados,long dadoslen){
+      char[2] pOrigem = cast(char[2])nativeToLittleEndian(cast(ushort)portaOrigem);
+      char[2] pDestino = cast(char[2])nativeToLittleEndian(cast(ushort)portaDestino);
+      char[2] pJanela = cast(char[2])nativeToLittleEndian(cast(ushort)janela);
+      char[4] pNumeroSequencia = cast(char[4])nativeToLittleEndian(cast(uint)numeroSequencia);
+      char[4] pNumeroReconhecimento = cast(char[4])nativeToLittleEndian(cast(uint)(numeroReconhecimento));
+      char[2] pComprimentoCabecalho = cast(char[2])nativeToLittleEndian(cast(ushort)(comprimentoCabecalho));
+      ushort check = checksum16(cast(char*)dados[0 .. dadoslen], cast(int)dadoslen);
+      char[2] checksum = cast(char[2])nativeToLittleEndian(check);
+      segmento = to!string(pOrigem)~to!string(pDestino)~to!string(pNumeroSequencia)~to!string(pNumeroReconhecimento)~to!string(bitsControle)~to!string(pJanela)~to!string(pComprimentoCabecalho)~to!string(checksum)~to!string(dados[0..dadoslen]);
+      writeln(segmento);
+      writeln("Porta origem: "~to!string(portaOrigem));
+      writeln("Porta destino: "~to!string(portaDestino));
+      writeln("Numero de sequencia: "~to!string(numeroSequencia));
+      writeln("Numero de reconhecimento: "~to!string(numeroReconhecimento));
+      writeln("Bits de controle: "~to!string(bitsControle));
+      writeln("Janela: "~to!string(janela));
+      writeln("Comprimento do cabecalho: "~to!string(comprimentoCabecalho));
+      writeln("Checksum: "~to!string(checksum));
+      writeln("Dados: "~to!string(dados[0..dadoslen]));
+    }
+//separa segmento
   void separaSegmento(char *dados,long tam){
     portaOrigemD = cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[0..2]);
+    writeln("Porta origem: "~to!string(portaOrigemD));
     portaDestinoD = cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[2..4]);
+    writeln("Porta destino: "~to!string(portaDestinoD));
     numeroSequenciaD=cast(int)littleEndianToNative!(uint,4)(cast(ubyte[4])dados[4..8]);
+    writeln("Numero de sequencia: "~to!string(numeroSequenciaD));
     numeroReconhecimentoD=cast(int)littleEndianToNative!(uint,4)(cast(ubyte[4])dados[8..12]);
+    writeln("Numero de reconhecimento: "~to!string(numeroReconhecimentoD));
     bitsControleD=cast(char)littleEndianToNative!(byte,1)(cast(ubyte[1])dados[12..13]);
     decodifica(bitsControleD);
     vetorControle=cast(char[])retornoControle;
+    writeln("Flag do ultimo segmento: ");
+    writeln(vetorControle[1]);
+    writeln("Bits controle: "~to!string(bitsControleD));
     janelaD=cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[13..15]);
+    writeln("Janela: "~to!string(janelaD));
     comprimentoCabecalhoD=cast(int)littleEndianToNative!(byte,1)(cast(ubyte[1])dados[15..16]);
+    writeln("comprimento cabecalho: "~to!string(comprimentoCabecalhoD));
     checksumD=cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[16..18]);
+    writeln("Checksum: "~to!string(checksumD));
     if(tam>=19){
       mensagemD=dados[19..tam];
       mensagemE=to!string(mensagemD);
+      writeln("Dados recebidos: ");
+      writeln(mensagemE);
       tamanhoBufferDestinatario=tamanhoBufferDestinatario+cast(int)tam-19;
     }
   }
-
+//separa segmento
   void separaSegmento2(char *dados,long tam){
     portaOrigemDR = cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[0..2]);
-    //writeln("Porta origem:"~to!string(portaOrigemD));
+    writeln("Porta origem: "~to!string(portaOrigemDR));
     portaDestinoDR = cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[2..4]);
-    //writeln("Porta destino:"~to!string(portaDestinoD));
+    writeln("Porta destino: "~to!string(portaDestinoDR));
     numeroSequenciaDR=cast(int)littleEndianToNative!(uint,4)(cast(ubyte[4])dados[4..8]);
-    //writeln("sequencia:"~to!string(numeroSequenciaD));
+    writeln("Numero de sequencia: "~to!string(numeroSequenciaDR));
     numeroReconhecimentoDR=cast(int)littleEndianToNative!(uint,4)(cast(ubyte[4])dados[8..12]);
-    //writeln("reconhecimento:"~to!string(numeroReconhecimentoD));
+    writeln("Numero de reconhecimento: "~to!string(numeroReconhecimentoDR));
     bitsControleDR=cast(char)littleEndianToNative!(byte,1)(cast(ubyte[1])dados[12..13]);
     decodifica(bitsControleDR);
     vetorControle=cast(char[])retornoControle;
-    //writeln("flag de ultimo segmento:");
-    //writeln(vetorControle[1]);
-    //writeln("bits controle:"~to!string(bitsControleD));
+    writeln("Flag de ultimo segmento: ");
+    writeln(vetorControle[1]);
+    writeln("Bits de controle: "~to!string(bitsControleDR));
     janelaDR=cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[13..15]);
-    //writeln("janela:"~to!string(janelaD));
+    writeln("Janela: "~to!string(janelaDR));
     comprimentoCabecalhoD=cast(int)littleEndianToNative!(byte,1)(cast(ubyte[1])dados[15..16]);
-    //writeln("comprimento cabecalho:"~to!string(comprimentoCabecalhoD));
+    writeln("Comprimento do cabecalho: "~to!string(comprimentoCabecalhoDR));
     checksumDR=cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[16..18]);
+    writeln("Checksum: "~to!string(checksumDR));
     if(tam>=19){
       mensagemDR=dados[19..tam];
       mensagemER=to!string(mensagemD);
       tamanhoBufferDestinatarioR=tamanhoBufferDestinatarioR+cast(int)tam-19;
-      //writeln("mensagem: ");
-      //writeln(mensagemER);
+      writeln("Dados: ");
+      writeln(mensagemER);
     }
   }
 
   void recebeRede(){
-    writeln("Esperando conexao com camada Rede");
     if(!conectado){
+      //aceita conexao da camada de rede
+      writeln("Aguardando conexões da camada de rede na porta 6768");
       servidor = listener.accept();
+      writeln("Conexao da camada de rede aceita");
       conectado = true;
     }
     int count=0;
     janelaD=1;
+    //cria numero de sequencia aleatorio
     numeroSequencia=uniform(0,100);
     mensagem=[];
     bufferDestinatario="";
@@ -197,23 +216,23 @@ class ServidorTCP {
     /*Estabelecimento de conexão de 3 vias - handshake*/
     dadoslenR = servidor.receive(dadosR);
     writeln("Estabelecimento de conexao (Handshake)");
+    writeln("\nSegmento recebido da camada de rede: \n" ~dadosR[0..dadoslenR]);
     separaSegmento(cast(char*)dadosR,dadoslenR);
     portaOrigem=portaDestinoD;
     portaDestino=portaOrigemD;
     numeroReconhecimento=numeroSequenciaD+1;
     codifica("00010010");
+    writeln("\nSegmento enviado para a camada de rede: ");
     criaSegmento(portaOrigem,portaDestino,janelaD,18,numeroSequencia,numeroReconhecimento,bitsControle,cast(char*)dadosR[0..0],0);
-//    numeroSequencia=numeroSequencia+1;
     servidor.send(segmento);
     while(1){
       count++;
+      //recebe \nSegmento da camada de rede
       dadoslenR = servidor.receive(dadosR);
-      writeln(dadosR[0..dadoslenR]);
+      writeln("\nSegmento recebido da camada de rede: \n" ~dadosR[0..dadoslenR]);
       separaSegmento(cast(char*)dadosR,dadoslenR);
-      writeln("Pacote len = " ~ to!string(dadoslenR));
-      writeln("Recebi segmento: " ~ to!string(numeroSequenciaD));
       bufferDestinatario = bufferDestinatario ~ mensagemE;
-      writeln("Buffer destinatário\n " ~bufferDestinatario);
+      //envia a resposta
       portaOrigem=portaDestinoD;
       portaDestino=portaOrigemD;
       janela=janelaD;
@@ -221,7 +240,7 @@ class ServidorTCP {
       numeroReconhecimento=numeroSequenciaD+MSS;
       if(vetorControle[1]=='0'){
         codifica("00010000");
-        writeln("Enviei confirmacao: " ~ to!string(numeroReconhecimentoD));
+        writeln("\nSegmento enviado para a camada de rede: ");
         criaSegmento(portaOrigem,portaDestino,janela,18,numeroSequencia,numeroReconhecimento,bitsControle,cast(char*)dadosR[0..0],0);
         servidor.send(segmento);
         continue;
@@ -231,27 +250,31 @@ class ServidorTCP {
       }
     }
     mensagem=cast(char[])bufferDestinatario;
-    writeln("Buffer destinatario final: ");
+    writeln("Requisicao completa: ");
     writeln(mensagem);
-
+    //abre conexao com camada de aplicacao na porta de destino
     socket = new Socket(AddressFamily.INET,  SocketType.STREAM);
+    writeln("Aguardando camada de aplicação ficar disponivel na porta "~to!string(portaDestinoD));
     while(true){
       try {
+        //tenta conectar com a camada de aplicacao
         socket.connect(new InternetAddress("localhost", cast(ushort)portaDestinoD));
+        writeln("Conectado a camada de aplicação");
         break;
       } catch( Exception e ){
         continue;
       }
     }
-    writeln("\nEnviando para Aplicacao \n" ~ mensagem);
+    writeln("\nMensagem enviada para a camada de aplicação: ");
+    writeln(mensagem);
     // Envia a requisicao pra aplicacao
     socket.send(mensagem);
     //recebe resposta
     dadoslen = socket.receive(dados);
     socket.close();
-    writeln("\nDados recebidos da aplicacao: ");
-    writeln(dados[0..dadoslen]);
+    writeln("\nMensagem recebida da camada de aplicação: " ~dados[0 .. dadoslen]);
     //encaminha resposta pra Rede
+    //calcula o numero de segmentos necessarios levando em consideração a MSS e o tamanho dos dados a serem enviados
     tamDados=MSS-18;
     long dadoslenA=dadoslen;
     dadosA=dados;
@@ -265,33 +288,33 @@ class ServidorTCP {
     int aux=0;
     int i=0;
     janelaR=numSegmentos;
-    writeln(numSegmentos);
     if(numSegmentos>0){
         while(i<numSegmentos){
           codifica("00010000");
-          writeln("Enviei segmento: " ~ to!string(numeroSequenciaR));
+          writeln("\nSegmento enviado para a camada de rede: ");
           criaSegmento(portaOrigem,portaDestino,janelaR,18,numeroSequenciaR,numeroReconhecimentoR,bitsControle,cast(char*)dadosA[aux..fimParcial],tamDados);
           servidor.send(segmento);
           aux=fimParcial;
           fimParcial=fimParcial+tamDados;
           i=i+1;
           dadoslenR=servidor.receive(dadosR);
+          writeln("\nSegmento recebido da camada de rede: \n" ~dadosR[0..dadoslenR]);
           separaSegmento2(cast(char*)dadosR,dadoslenR);
-          writeln("Recebi confimacao: "~to!string(numeroReconhecimentoDR));
           portaOrigem=portaDestinoD;
           portaDestino=portaOrigemD;
           numeroReconhecimentoR=numeroSequenciaDR+1;
           numeroSequenciaR=numeroSequenciaR+MSS;
         }
+        //envia o ultimo segmento
         if(restoDivisao==0){
           codifica("01010000");
-          writeln("Enviei segmento: " ~ to!string(numeroSequenciaR));
+          writeln("\nSegmento enviado para a camada de rede: ");
           criaSegmento(portaOrigem,portaDestino,janelaR,18,numeroSequenciaR,numeroReconhecimentoR,bitsControle,cast(char*)dadosA[aux..fimParcial],tamDados);
           servidor.send(segmento);
         } else {
           int aux2=aux+cast(int)restoDivisao;
           codifica("01010000");
-          writeln("Enviei segmento: " ~ to!string(numeroSequenciaR));
+          writeln("\nSegmento enviado para a camada de rede: ");
           criaSegmento(portaOrigem,portaDestino,janelaR,18,numeroSequenciaR,numeroReconhecimentoR,bitsControle,cast(char*)dadosA[aux..aux+restoDivisao],restoDivisao);
           servidor.send(segmento);
         }
@@ -299,32 +322,38 @@ class ServidorTCP {
         fimParcial=tamDados;
         i=0;
     }
-    writeln("FECHAMENTO DE CONEXAAAAAAAAAAAAAAAAAAAAAAAAAAO ");
+    writeln("\nFechamento de conexao: ");
     dadoslenR = servidor.receive(dadosR);
+    writeln("\nSegmento recebido da camada de rede: \n" ~dadosR[0..dadoslenR]);
     separaSegmento(cast(char*)dadosR,dadoslenR);
     portaOrigem=portaDestinoD;
     portaDestino=portaOrigemD;
     numeroReconhecimento=numeroSequenciaD+1;
     codifica("00010000");
     numeroSequencia=numeroSequenciaR+1;
+    writeln("\nSegmento enviado para a camada de rede: ");
     criaSegmento(portaOrigem,portaDestino,janelaD,18,numeroSequencia,numeroReconhecimento,bitsControle,cast(char*)dadosR[0..0],0);
     servidor.send(segmento);
     dadoslenR = servidor.receive(dadosR);
+    writeln("\nSegmento recebido da camada de rede: \n" ~dadosR[0..dadoslenR]);
     separaSegmento(cast(char*)dadosR,dadoslenR);
     numeroReconhecimento=numeroSequenciaD+1;
     portaOrigem=portaDestinoD;
     portaDestino=portaOrigemD;
     codifica("00010001");
     numeroSequencia=numeroSequencia+1;
+    writeln("\nSegmento enviado para a camada de rede: ");
     criaSegmento(portaOrigem,portaDestino,janelaD,18,numeroSequencia,numeroReconhecimento,bitsControle,cast(char*)dadosR[0..0],0);
     numeroSequencia=numeroSequencia+1;
     servidor.send(segmento);
     dadoslenR = servidor.receive(dadosR);
+    writeln("\nSegmento recebido da camada de rede: \n" ~dadosR[0..dadoslenR]);
     separaSegmento(cast(char*)dadosR,dadoslenR);
     numeroReconhecimento=numeroSequenciaD+1;
     codifica("00010000");
     portaOrigem=portaDestinoD;
     portaDestino=portaOrigemD;
+    writeln("\nSegmento enviado para a camada de rede: ");
     criaSegmento(portaOrigem,portaDestino,janelaD,18,numeroSequencia,numeroReconhecimento,bitsControle,cast(char*)dadosR[0..0],0);
     numeroSequencia=numeroSequencia;
     servidor.send(segmento);

@@ -1,0 +1,5 @@
+Camada de transporte não está pedindo o TMQ
+Temos que arrumar o checksum no UDP e no TCP
+Na camada fisica o campo tipo tem que ser formatado de acordo com o protocolo da camada superior
+Temos que descobrir como salvar uma imagem corretamente na aplicação, a requisição recebida não estamos conseguindo abrir como imagem
+Temos que arrumar aquele erro no funcionamento do roteador, tem uma foto com o mattar do desenho que o sandro fez

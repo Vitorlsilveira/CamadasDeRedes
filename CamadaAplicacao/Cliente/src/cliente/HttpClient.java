@@ -7,6 +7,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -66,7 +67,8 @@ public class HttpClient {
             IOException {
         Socket clientSocket = null;
         try {
-            // Abre a conexão
+            // Abre a conexão com a camada de transporte
+            System.out.println("Aguardando camada de transporte ficar disponível na porta 3333");
             while (true) {
                 try {
                     clientSocket = new Socket("localhost", 3333);
@@ -74,10 +76,11 @@ public class HttpClient {
                 } catch (ConnectException ex) {
                 }
             }
-
+            System.out.println("Conectado a camada de transporte");
+            
+            //envio
             PrintWriter outToServer = new PrintWriter(clientSocket.getOutputStream(), true);
-
-            //DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
+            //recebimento
             BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 
             String req = "";
@@ -88,14 +91,11 @@ public class HttpClient {
             req += "Connection: Close;";
 
             escritor("requisicaoEmTextoCA.txt", req);
-            System.out.println("Inicio REQ + " + req.length());
-            System.out.println(req);
-            System.out.println("Fim REQ");
-            //System.out.println("Pacote: \n\n" + req + "\n\n" + reqBin + "\n\n");
+            System.out.println("Mensagem enviada para a camada de transporte: \n\n" + req + "\n\n");
             outToServer.println(req);
 
             StringBuilder sb = new StringBuilder();
-            // recupera a resposta quando ela estiver disponível
+            // recupera a resposta da camada de transporte quando ela estiver disponivel
             while (true) {
                 int a = 0;
                 if (inFromServer.ready()) {
@@ -109,6 +109,7 @@ public class HttpClient {
             String response = sb.toString();
             String[] split = response.split("\r\n\r\n", 2);
             salvarImagem(path, split[1]);
+            System.out.println("Mensagem recebida da camada de transporte: " + sb.toString() );
             return sb.toString();
         } finally {
             if (clientSocket != null) {
@@ -117,6 +118,7 @@ public class HttpClient {
         }
     }
 
+    //funcao criada para salvar a resposta da requisicao como uma imagem FALTA ARRUMAR
     private void salvarImagem(String path, String imagem) throws IOException {
         byte[] buffer = imagem.getBytes(StandardCharsets.UTF_8);
         if (path.contains(".jpg")) {
@@ -129,6 +131,7 @@ public class HttpClient {
         }
     }
 
+    //converter bytes para imagem FALTA ARRUMAR
     public void ByteToImage(byte[] bytes) {
         byte[] imgBytes = bytes;
         try {
@@ -143,6 +146,7 @@ public class HttpClient {
         }
     }
 
+    //funcao criada para escrever dados num arquivo
     private static void escritor(String path, String dados) throws IOException {
         BufferedWriter buffWrite = new BufferedWriter(new FileWriter(path));
         buffWrite.append(dados + "\n");
@@ -150,24 +154,28 @@ public class HttpClient {
     }
 
     public static void main(String[] args) {
-        File f = new File("config");
-        BufferedReader br;
-        Scanner s = new Scanner(System.in);
-        System.out.println("Digite o IP de destino:");
-        //String ipDest = s.nextLine();
-        String ipDest = "192.168.0.101";
-        System.out.println("Digite a interface utilizada:");
-        //String interf = s.nextLine();
-        String interf = "wlan0";
+        //le do arquivo config , o ip de destino, a interface e a requisição
+        FileReader arq;
+        BufferedReader lerArq;
+        String ipDest="";
+        String interf="";
+        String arquivoRequerido="";
         try {
-            escritor("config", ipDest + "\n" + interf);
-        } catch (IOException ex) {
-            Logger.getLogger(HttpClient.class.getName()).log(Level.SEVERE, null, ex);
+          arq = new FileReader("config"); 
+          lerArq = new BufferedReader(arq); 
+          ipDest = lerArq.readLine(); // lê a primeira linha
+          interf = lerArq.readLine(); // lê a primeira linha
+          arquivoRequerido = lerArq.readLine(); // lê a primeira linha        
+          arq.close();
+        } catch (IOException e) {
+             System.err.printf("Erro na abertura do arquivo: %s.\n",
+             e.getMessage());
         }
+        
+        //instancia novo objeto http client com os parametros adequados
         HttpClient client = new HttpClient(ipDest, 6768, "localhost");
         try {
-            System.out.println("Digite o arquivo requerido:");
-            System.out.println(client.getURIRawContent("/" + s.nextLine()));
+            client.getURIRawContent("/" + arquivoRequerido);
         } catch (UnknownHostException e) {
             logger.log(Level.SEVERE, "Host desconhecido!", e);
         } catch (IOException e) {

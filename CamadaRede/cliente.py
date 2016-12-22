@@ -8,9 +8,11 @@ import errno
 from socket import error as socket_error
 import crc16
 BUFFER_SIZE = 65536
-
-#pip install crc16
+#variavel global ip de destino
 ipDestino=0
+
+#estabelece conexao com a camada fisica na porta 9999
+print("Aguardando camada fisica ficar disponivel na porta 9999");
 while True:
     try:
         sockfisico = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # Cria o descritor do socket
@@ -19,12 +21,9 @@ while True:
         break
     except:
         continue
-
+print("Conectado a camada fisica");
+#separa cada parte do pacote
 def separaPacote(pacote):
-    print "pacote"
-    print pacote
-    print "teste"
-    print len(pacote)
     versionIHL = unpack("B", pacote[0:1])[0]
     typeService = unpack("B", pacote[1:2])[0]
     totalLength = unpack("H", pacote[2:4])[0]
@@ -38,6 +37,7 @@ def separaPacote(pacote):
     segmento = pacote[20:len(pacote)-2]
     return segmento
 
+#cria o pacote, anexa o cabeçalho da camada de rede ao segmento recebido
 def criaPacote(segmento, sourceIP, destIP):
     versionIHL = pack("B", 45)
     typeService = pack("B", 0)
@@ -57,32 +57,38 @@ def criaPacote(segmento, sourceIP, destIP):
     pacote = header+segmento
     return pacote
 
+#recebe da camada de cima o segmento e envia para fisica ,aguardando resposta para encaminhar a resposta a de transporte
 def recebe_transporte(port):
+    #abre socket para que a camada de transporte se conecte a de rede na porta : port
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # Cria o descritor do socket
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.bind(("localhost", port)) # Associa o endereço e porta ao descritor do socket.
     sock.listen(10) # Tamanho maximo da fila de conexões pendentes
-
-    print("Aguardando conexoes da camada de transporte: "+str(port)+"\n")
-
+    print("Aguardando conexões da camada de transporte na porta "+str(port))
     (con, address) = sock.accept() # aceita conexoes e recupera o endereco do cliente.
-    print(address[0]+" Conectado...")
+    print("Conexão da camada de transporte aceita")
 
     while True:
+        # recebe segmento da camada de transporte
         segmento = con.recv(BUFFER_SIZE) # Recebe uma mensagem do tamanho BUFFER_SIZE
         if len(str(segmento)) >= 0:
-            print(address[0]+" diz: \n" + segmento)
+            print("Segmento recebido da camada de transporte: " + segmento)
+            #carrega o arquivo de configuração para pegar o ip de destino e a interface
             fil = open("config")
             fo = fil.readlines()
+            #att a variavel global ip de destino
             global ipDestino
             ipDestino = fo[0].splitlines()[0]
             interface = fo[1].splitlines()[0]
             fil.close()
+            #obtem o ip de origem
             ipOrigem = get_myip_address(interface)
+            #cria pacote
             pacote = criaPacote(segmento, ipOrigem, ipDestino)
-
+            #envia para a fisica o pacote e aguarda a resposta
             resposta = conecta_fisica(pacote)
-            print("Resposta do servidor: " + resposta)
+            print("Segmento enviado para a camada de transporte: " + resposta)
+            #envia resposta da fisica para a camada de transporte
             con.send(resposta) # Envia mensagem através do socket.
         else:
             print("Sem dados recebidos de camada de transporte: "+address[0])
@@ -91,36 +97,34 @@ def recebe_transporte(port):
 def conecta_fisica(pacote):
     while True:
         try:
+            #checa o proximo next hop
             define_nextHop()
-            print("Mensagem enviada para fisica >>> "+ pacote)
+            #envia pacote para a fisica
+            print("Pacote enviado para a camada fisica: "+ pacote)
             sockfisico.send(pacote) # Envia uma mensagem através do socket.
+            #recebe resposta da camada fisica
             resposta = sockfisico.recv(BUFFER_SIZE) # Recebe mensagem enviada pelo socket.
+            #separa o pacote para obter o segmento
             segmento = separaPacote(resposta)
-            print("SEGMENTO = " + segmento)
             if len(str(pacote)) >= 0:
-                print("Mensagem recebida do servidor fisico: " + resposta)
+                print("Pacote recebido da camada fisica: " + resposta)
                 break
         except socket_error as serr:
             if serr.errno != errno.ECONNREFUSED:
                 raise serr
+    #retorna o segmento para que seja enviado para a camada de transporte a resposta
     return segmento
 
+#le a tabela de roteamento
 def define_nextHop():
     tabela = open("CamadaRede/tabela1", 'r')
     for linha in tabela:
-        print "entrou"
         linha=linha.strip().split(" ")
         ipDeRede=linha[0]
         mascara=linha[1]
         nextHop=linha[2]
-        print ipDeRede
-        print mascara
-        print nextHop
-        print "ip destino"+ipDestino
+        # se o ip de rede calculado bater com o ip de rede da tabela, é pq encontramos o next hop
         if ipDeRede == calculaIPRede(ipDestino,mascara):
-            print("ip de rede:"+ipDeRede)
-            print ("calculo do ip de rede: "+calculaIPRede(ipDestino,mascara))
-            print("next Hop:"+nextHop)
             arquivo=open("CamadaRede/nexthop1","w")
             arquivo.write(nextHop)
             arquivo.close
@@ -128,6 +132,7 @@ def define_nextHop():
     print "Pacote descartado, arrume a tabela de roteamento da camada de rede"
     return
 
+# a partir do ip e da mascara faz um and bit a bit retornando o ip de rede
 def calculaIPRede(ip,mask):
     ipRede=""
     numIP=""
@@ -160,6 +165,7 @@ def calculaIPRede(ip,mask):
             ipRede=ipRede+str(int(numIP)&int(numMask))
     return ipRede
 
+#retorna o ip da maquina local a partir da interface passada como parametro
 def get_myip_address(ifname):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     return socket.inet_ntoa(fcntl.ioctl(
@@ -171,5 +177,3 @@ def get_myip_address(ifname):
 
 server1 = 'localhost'
 recebe_transporte(7777)
-ipRede=calculaIPRede("192.168.10.20","255.255.141.0")
-print ipRede

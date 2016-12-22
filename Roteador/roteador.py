@@ -12,7 +12,8 @@ BUFFER_SIZE = 65536
 ipResposta = 0
 ipOrigem = 0
 
-#Conectando com o servidor fisico do roteador para transmitir para o next hop
+#Conectando com o servidor fisico do roteador que irá transmitir para o next hop
+print("Aguardando servidor da camada fisica ficar disponivel na porta 2222");
 while True:
     try:
         sockfisico = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # Cria o descritor do socket
@@ -21,84 +22,76 @@ while True:
         break
     except:
         continue
-
+print("Conectado ao servidor da camada fisica do roteador");
 def recebe_fisica(port):
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # Cria o descritor do socket
+    # Cria o descritor do socket
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    sock.bind(("localhost", port)) # Associa o endereço e porta ao descritor do socket.
-    sock.listen(10) # Tamanho maximo da fila de conexões pendentes
+    # Associa o endereço e porta ao descritor do socket.
+    sock.bind(("localhost", port))
+    # Tamanho maximo da fila de conexões pendentes
+    sock.listen(10)
 
-    print("Aguardando conexoes da camada fisica do roteador: "+str(port)+"\n")
+    print("Aguardando conexoes da camada fisica do roteador: "+str(port))
 
-    (con, address) = sock.accept() # aceita conexoes e recupera o endereco do cliente.
-    print(address[0]+" Conectado...")
+    # aceita conexoes e recupera o endereco do cliente.
+    (con, address) = sock.accept()
+    print("Conexão da camada fisica aceita")
 
     while True:
-        pacote = con.recv(BUFFER_SIZE) # Recebe uma mensagem do tamanho BUFFER_SIZE
+        # Recebe uma mensagem do tamanho BUFFER_SIZE
+        pacote = con.recv(BUFFER_SIZE)
         if len(str(pacote)) > 5:
             print(address[0]+" diz: " + pacote)
-            segmento = separaPacote(pacote)
-            print "\tPACOTE"
-            print pacote
-        #    print "\n\n"
-            resposta = recebe_cliente_fisico(pacote)
-            con.send(resposta) # Envia mensagem através do socket.
-            print "Teste"
+            separaPacote(pacote)
+            #envia dados para a fisica e recebe resposta
+            resposta = conectaFisica(pacote)
+            # Envia resposta através do socket.
+            con.send(resposta)
     con.close()
 
-
-
+#separa pacote recebido, para extrair informações sobre o ip de destino e o ip de origem
 def separaPacote(pacote):
-    print "pacote"
-    print pacote
-    print "teste"
-    print len(pacote)
-    versionIHL = unpack("B", pacote[0:1])[0]
-    typeService = unpack("B", pacote[1:2])[0]
-    totalLength = unpack("H", pacote[2:4])[0]
-    identification = unpack("H", pacote[4:6])[0]
-    flagsFragOffset = unpack("H", pacote[6:8])[0]
-    ttl = unpack("B", pacote[8:9])[0]
-    protocol = unpack("B", pacote[9:10])[0]
-    headerChecksum = unpack("H", pacote[10:12])[0]
     sourceAdd = str(unpack("B", pacote[12:13])[0])+"."+str(unpack("B", pacote[13:14])[0])+"."+str(unpack("B", pacote[14:15])[0])+"."+str(unpack("B", pacote[15:16])[0])
     destAdd = str(unpack("B", pacote[16:17])[0])+"."+str(unpack("B", pacote[17:18])[0])+"."+str(unpack("B", pacote[18:19])[0])+"."+str(unpack("B", pacote[19:20])[0])
     global ipOrigem
     ipOrigem=sourceAdd
     global ipResposta
     ipResposta=destAdd
-    segmento = pacote[20:len(pacote)-1]
-    return segmento
 
-
-
-def recebe_cliente_fisico(pacote):
+#envia para servidor da camada fisica do roteador e recebe resposta da mesma
+def conectaFisica(pacote):
     while True:
         try:
             define_nextHop()
-            print("Mensagem enviada para fisica >>> "+ pacote)
+            print("Mensagem enviada para fisica: "+ pacote)
             sockfisico.send(pacote) # Envia uma mensagem através do socket.
             resposta = sockfisico.recv(BUFFER_SIZE) # Recebe mensagem enviada pelo socket.
             if len(str(pacote)) >= 0:
-                print("Mensagem recebida do servidor fisico: " + resposta)
+                print("Mensagem recebida da camada fisica: " + resposta)
                 break
         except socket_error as serr:
             if serr.errno != errno.ECONNREFUSED:
                 raise serr
     return resposta
 
+#funcao que define o next hop
 def define_nextHop():
+    #le a tabela de roteamento do arquivo tabela
     tabela = open("Roteador/tabela", 'r')
+    #percorre todas as linhas da tabela, separando ip de rede, mascara e next hop
     for linha in tabela:
         linha=linha.strip().split(" ")
         ipDeRede=linha[0]
         mascara=linha[1]
         nextHop=linha[2]
 
+        #verifica se o ip de rede da tabela bate o ip de rede do destino dada uma mascara, se isso acontecer, encontramos o next hop
         if ipDeRede == calculaIPRede(ipResposta,mascara):
-            print("ip de rede:"+ipDeRede)
-            print ("calculo do ip de rede: "+calculaIPRede(ipResposta,mascara))
-            print("next Hop:"+nextHop)
+            print "Encontramos a linha correspondente: "
+            print("Ip de rede:"+ipDeRede)
+            print("Next hop:"+nextHop)
+            #escreve nextHop num arquivo para ser lido pela camada fisica
             arquivo=open("Roteador/nexthop","w")
             arquivo.write(nextHop)
             arquivo.close
@@ -106,6 +99,7 @@ def define_nextHop():
     print "Pacote descartado, arrume a tabela de roteamento"
     return
 
+#funcao que calcula o ip de rede dado um ip e uma mascara
 def calculaIPRede(ip,mask):
     ipRede=""
     numIP=""

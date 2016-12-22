@@ -16,6 +16,7 @@ import java.util.logging.Logger;
  *
  * @author mattar
  */
+//cria a resposta a ser enviada para a camada de transporte a partir da requisição recebida e formatada
 public class Response{
 
 	private Request request;
@@ -28,6 +29,7 @@ public class Response{
 		this.request = request;
 	}
 
+        //cria a resposta da requisição
 	public String respond() {
 		StringBuilder sb = new StringBuilder();
 		// Cria primeira linha do status code, no caso sempre 200 OK
@@ -40,27 +42,26 @@ public class Response{
 				.append("\r\n");
 		sb.append("Connection: Close").append("\r\n");
 		sb.append("Content-Type: text/html; charset=UTF-8").append("\r\n");
-                
 		sb.append("\r\n");
 		
                 
                 // Agora vem o corpo em HTML
-                // Devemos carregar o arquivo desejado pelo cliente
+                // Devemos carregar o arquivo desejado pelo cliente na resposta
                 try {
-                    // O diretorio onde se encontram as paginas é o pages/
                     // Esse .substring(1) serve para remover o / que acompanha o URI
                     this.content = readFile(request.getUri().substring(1), StandardCharsets.UTF_8);
                 } catch (IOException ex) {
                     Logger.getLogger(Response.class.getName()).log(Level.SEVERE, null, ex);
                 }
+                //anexa o corpo html na resposta da requisicao
                 sb.append(this.content);
 		sb.append("\r\n");
-		
+		//retorna resposta da requisição recebida
 		return sb.toString();
 
 	}
         
-        
+        //le do arquivo os bytes e retorna uma string
         static String readFile(String path, Charset encoding) throws IOException {
             byte[] encoded = Files.readAllBytes(Paths.get(path));
             return new String(encoded, encoding);

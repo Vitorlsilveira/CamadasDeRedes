@@ -5,11 +5,15 @@ require 'digest/crc32'
 class Servidor
   def initialize(port)
     @port=port
+    #servidor aguarda conexao na porta port
 		@server=TCPServer.open(port)
     @sock1=nil
+    #loop para aguardar a camada de rede ficar disponivel
+    puts "Aguardando camada de rede ficar disponivel na porta  4444"
 		while @sock1==nil
       begin
 			@sock1 = TCPSocket.open("localhost",4444)
+      puts "Conectado a camada de rede"
 			rescue
 				@sock1=nil
         sleep 1
@@ -18,6 +22,7 @@ class Servidor
     @TMQ=1
 	end
 
+  #funcao que converte de binario para hexadecimal
   def converteBinToHex(x)
 		saida=""
     j = 0
@@ -29,6 +34,7 @@ class Servidor
 		return saida
 	end
 
+  #funcao que converte de hexadecimal para binario
   def converteHexToBin(x)
 		saida=""
 		for i in 0..(x.size-1)
@@ -37,26 +43,25 @@ class Servidor
 		return saida
 	end
 
-  def conectaTransporte(dados)
-    #tenta conectar ate conseguir
-		#puts "To esperando servidor de transporte ficar disponivel!"
-
+  def conectaRede(dados)
+    #envia pacote para a camada de rede
+    puts "\nPacote enviado para a camada de rede: #{dados}"
     @sock1.write dados+"\n";
     resposta = ""
-    puts "Enviei para o servidor de transporte! Esperando resposta..."
+    #recebe resposta da camada de rede
     resposta=@sock1.recv(65536)
-    puts resposta
     return resposta
 	end
 
   def executar
-    puts "Listening to port #{@port}"
+    puts "Aguardando conexões da camada fisica na porta #{@port}"
+    #loop para aguardar conexoes com clientes
     loop {
       Thread.start(@server.accept) do |client|
-        puts "Conectado"
+        puts "Conexão da camada fisica aceita"
         while true
+          #recebe quadro do cliente fisico pelo roteador
           mensagem = client.gets
-          puts mensagem
 
           if mensagem[0..6] == "1110111"
             #Aqui definimos o TMQ
@@ -67,9 +72,8 @@ class Servidor
           end
 
           dados = mensagem
-
-          puts "\n\n"
-
+          puts "\nQuadro recebido da camada fisica: #{dados} "
+          #separa o quadro recebido
           preambulo = dados[0..63]
           macDestino = converteBinToHex(dados[64..111])
           macOrigem = converteBinToHex(dados[112..159])
@@ -77,59 +81,73 @@ class Servidor
           data = dados[176..dados.size-34]
           crc = converteBinToHex(dados[dados.size-33..dados.size-1])
 
+          #imprime o quadro recebido
           puts "Preambulo : #{preambulo}"
       		puts "Mac Destino : #{macDestino}"
       		puts "Mac Origem : #{macOrigem}"
       		puts "Type : #{type}"
       		puts "Pacote : #{[data].pack("B*")}"
-          puts "Pacote size = #{[data].pack("B*").size}"
+          puts "Tamanho do pacote = #{[data].pack("B*").size}"
       		puts "Crc : #{crc}"
-          puts "\n\n"
 
-          File.write("quadro_recebido.txt", data)
-          resposta = conectaTransporte([data].pack("B*"))
-          puts "\nRESPOSTA - tam #{resposta.length} =\n"
-          puts resposta
+          #escreve num arquivo os dados recebidos
+          File.write("quadro_recebido", data)
+          #envia para camada de rede os dados e aguarda resposta
+          resposta = conectaRede([data].pack("B*"))
+          #imprime a resposta da camada de rede
+          puts "\nPacote recebido da camada de rede: #{resposta}"
+          #converte a resposta para binario
           respostaBin = resposta.unpack("B*")[0].to_s
-          puts respostaBin
-          puts "Enviando para o cliente a resposta..."
+          #imprime a resposta em binario
+          puts "Resposta em binario:#{respostaBin}"
 
+          #enviando resposta para o cliente fisico
+
+          #troca o mac de origem com o mac de destino
           aux=macDestino
           macDestino=macOrigem
           macOrigem=aux
-          puts "Mac do remetente: #{macOrigem}"
-          puts "Mac do destinatario: #{macDestino}"
-
           #transforma os mac para binario
           macDestinoBinario=converteHexToBin(macDestino)
           macOrigemBinario=converteHexToBin(macOrigem)
 
-          puts "Mac do destinatario em binario: #{macDestinoBinario}"
-          puts "Mac do remetente em binario: #{macOrigemBinario}"
-
           #usado para sincronizar o emissor ao clock do remetente
           preambulo = "1010101010101010101010101010101010101010101010101010101010101011"
           #tipo indica o protocolo da camada superior e deve ser formatado para binario
+          #FALTA ARRUMAR
           type=  converteHexToBin("0800")
-          #utilizado para deteccao de erros
-          puts "\nCRC HEX ==  #{Digest::CRC32.hexdigest("#{respostaBin}")}\n"
+          #Checksum utilizado para deteccao de erros
+
           crc = converteHexToBin(Digest::CRC32.hexdigest("#{respostaBin}"))
 
-          puts "Frame ethernet:\n"
-          puts "#{preambulo}#{macDestinoBinario}#{macOrigemBinario}#{type}#{respostaBin}#{crc}"
+          #imprime o frame ethernet (Quadro)
+          quadro = preambulo+macDestinoBinario+macOrigemBinario+type+respostaBin+crc
+          puts "\nQuadro enviado para a camada fisica: #{quadro}"
+          #imprime preambulo
+          puts "Pre ambulo: #{preambulo}"
+          #imprime o MAC de origem e o MAC de destino em hexadecimal
+          puts "Mac do remetente: #{macOrigem}"
+          puts "Mac do destinatario: #{macDestino}"
+          #imprime os MAC em binario
+          puts "Mac do destinatario em binario: #{macDestinoBinario}"
+          puts "Mac do remetente em binario: #{macOrigemBinario}"
+          #imprime type
+          puts "Type: #{type}"
+          #imprime dados
+          puts "Dados: #{respostaBin}"
+          #imprime CRC
+          puts "CRC = #{crc}"
+          #imprime o tamanho de cada item do cabeçalho da camada fisica
           puts "Tamanho do preambulo : #{preambulo.size.to_f/8}"
           puts "Tamanho do macDestinoBinario : #{macDestinoBinario.size.to_f/8}"
           puts "Tamanho do macOrigemBinario : #{macOrigemBinario.size.to_f/8}"
           puts "Tamanho do type : #{type.size.to_f/8}"
           puts "Tamanho do pacote : #{respostaBin.size.to_f/8}"
           puts "Tamanho do crc : #{crc.size.to_f/8}"
-
-          puts "CRC = #{crc}"
-
-          #pdu da camada fisica
-          quadro = preambulo+macDestinoBinario+macOrigemBinario+type+respostaBin+crc
-          puts "\nTamanho do quadro : #{quadro.size.to_f/8}"
-          File.write("quadroResposta.txt", quadro)
+          puts "Tamanho do quadro : #{quadro.size.to_f/8}"
+          #escreve a resposta num arquivo de resposta
+          File.write("quadro_resposta.txt", quadro)
+          #envia para o cliente fisico a resposta atraves do roteador
           client.puts quadro
         end
         client.close

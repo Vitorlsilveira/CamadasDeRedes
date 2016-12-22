@@ -7,10 +7,13 @@ import sys
 import errno
 from socket import error as socket_error
 import crc16
-
 BUFFER_SIZE = 65536
+#ip de origem e resposta como variaveis globais
 ipResposta = 0
 ipOrig=0
+
+#estabelece conexao com a camada de transporte na porta 6768
+print("Aguardando camada de transporte ficar disponivel na porta 6768");
 while True:
     try:
         socktransporte = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # Cria o descritor do socket
@@ -19,9 +22,9 @@ while True:
         break
     except:
         continue
-
+print("Conectado a camada de transporte");
+#separa cada parte do pacote
 def separaPacote(pacote):
-    print "pacote len = " + str(len(pacote))
     versionIHL = unpack("B", pacote[0:1])[0]
     typeService = unpack("B", pacote[1:2])[0]
     totalLength = unpack("H", pacote[2:4])[0]
@@ -39,6 +42,7 @@ def separaPacote(pacote):
     segmento = pacote[20:len(pacote)-2]
     return segmento
 
+#cria o pacote, anexa o cabeçalho da camada de rede ao segmento recebido
 def criaPacote(segmento, sourceIP, destIP):
     versionIHL = pack("B", 45)
     typeService = pack("B", 0)
@@ -56,50 +60,47 @@ def criaPacote(segmento, sourceIP, destIP):
     headerChecksum = pack("H", crc16.crc16xmodem(header))
     header = versionIHL+typeService+totalLength+identification+flagsFragOffset+ttl+protocol+headerChecksum+sourceAdd+destAdd
     pacote = header+segmento
-    print "cria Pacote"
-    print pacote
     return pacote
 
+#recebe pacote da fisica , encaminha para camada superior ,aguarda resposta e responde a fisica
 def recebe_fisica(port):
+    #cria socket para que a fisica se conecte a camada de rede
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # Cria o descritor do socket
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.bind(("localhost", port)) # Associa o endereço e porta ao descritor do socket.
     sock.listen(10) # Tamanho maximo da fila de conexões pendentes
 
-    print("Aguardando conexoes da camada fisica: "+str(port)+"\n")
+    print("Aguardando conexoes da camada fisica na porta "+str(port))
 
+    #aceita conexao
     (con, address) = sock.accept() # aceita conexoes e recupera o endereco do cliente.
-    print(address[0]+" Conectado...")
+    print("Conexão da camada fisica aceita")
 
     while True:
+        #recebe pacote da fisica
         pacote = con.recv(BUFFER_SIZE) # Recebe uma mensagem do tamanho BUFFER_SIZE
         if len(str(pacote)) > 5:
-            print(address[0]+" diz: " + pacote)
+            print("\nPacote recebido da camada fisica: " + pacote)
             segmento = separaPacote(pacote)
-            print "Teste1"
-            print("SEGMENTO = " + segmento)
-            print "teste2"
+            #envia para a camada de transporte o pacote e recebe a resposta
             resposta = conecta_transporte(segmento)
-            print("Resposta da transporte: " + resposta)
-            print("RESPOSTA LEN " + str(len(resposta)))
             pacote = criaPacote(resposta, ipOrig, ipResposta)
-            print "\tPACOTE"
-            print pacote
-        #    print "\n\n"
+            #define o proximo next hop de acordo com a tabela de roteamento
             define_nextHop()
+            #envia resposta para a camada fisica pelo socket
+            print("\nPacote enviado para a camada fisica: "+ pacote)
             con.send(pacote) # Envia mensagem através do socket.
-            print "Teste"
     con.close()
 
-
+# envia para a camada de transporte o segmento e recebe resposta do mesmo
 def conecta_transporte(segmento):
     while True:
         try:
-            print("Mensagem enviada para transporte >>> "+ segmento)
+            print("\nSegmento enviado para a camada de transporte: " + segmento)
             socktransporte.send(segmento) # Envia uma mensagem através do socket.
             resposta = socktransporte.recv(BUFFER_SIZE) # Recebe mensagem enviada pelo socket.
             if len(str(segmento)) >= 0:
-                print("Mensagem recebida do servidor transporte: " + resposta)
+                print("\nSegmento recebido da camada de transporte: " + resposta)
                 break
             else:
                 print("Nenhum dado recebido do servidor...")
@@ -107,8 +108,10 @@ def conecta_transporte(segmento):
             if serr.errno != errno.ECONNREFUSED:
                 # Not the error we are looking for, re-raise
                 raise serr
+    #retorna a resposta recebida
     return resposta
 
+#analisa a tabela de roteamento para definir o next hop no qual a fisica se conectara
 def define_nextHop():
     tabela = open("CamadaRede/tabela2", 'r')
     for linha in tabela:
@@ -116,10 +119,8 @@ def define_nextHop():
         ipDeRede=linha[0]
         mascara=linha[1]
         nextHop=linha[2]
+        # se o ip de rede calculado bater com o ip de rede da tabela, é pq encontramos o next hop
         if ipDeRede == calculaIPRede(ipResposta,mascara):
-            print("ip de rede:"+ipDeRede)
-            print ("calculo do ip de rede: "+calculaIPRede(ipResposta,mascara))
-            print("next Hop:"+nextHop)
             arquivo=open("CamadaRede/nexthop2","w")
             arquivo.write(nextHop)
             arquivo.close
@@ -127,6 +128,7 @@ def define_nextHop():
     print "Pacote descartado, arrume a tabela de roteamento da camada de rede"
     return
 
+# a partir do ip e da mascara faz um and bit a bit retornando o ip de rede
 def calculaIPRede(ip,mask):
     ipRede=""
     numIP=""
@@ -159,6 +161,7 @@ def calculaIPRede(ip,mask):
             ipRede=ipRede+str(int(numIP)&int(numMask))
     return ipRede
 
+#retorna o ip da maquina local a partir da interface passada como parametro
 def get_myip_address(ifname):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     return socket.inet_ntoa(fcntl.ioctl(
@@ -168,16 +171,3 @@ def get_myip_address(ifname):
     )[20:24])
 
 recebe_fisica(4444)
-ipRede=calculaIPRede("192.168.10.20","255.255.141.0")
-print ipRede
-
-    #    192.168.10.20
-    #    AND BIT A BIT
-    #    255.255.255.128
-
-    #        11000000.10101000.00001010.00010100
-    #AND
-    #        11111111.11111111.10001101.10000000
-    #        ============================
-    #IPRede  11000000.10101000.00001010.00000000
-    #Assim, o ip da rede e 192.168.10.0

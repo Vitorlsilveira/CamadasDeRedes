@@ -51,11 +51,8 @@ public class HttpServer {
      * construtor
      */
     public void serve() {
+        //cria socket para que a camada de transporte possa se conectar na porta 5555
         ServerSocket serverSocket = null;
-
-        System.out.println("Iniciando servidor no endereço: " + this.host
-                + ":" + this.port);
-
         try {
             // Cria a conexão servidora
             serverSocket = new ServerSocket(port, 10,
@@ -64,52 +61,49 @@ public class HttpServer {
             logger.log(Level.SEVERE, "Erro ao iniciar servidor!", e);
             return;
         }
-        System.out.println("Conexão com o servidor aberta no endereço: " + this.host
-                + ":" + this.port);
-
         // Fica esperando pela conexão cliente
         while (true) {
-            System.out.println("Aguardando conexões...");
+            System.out.println("Aguardando conexões da camada de transporte na porta: " + this.port);
             Socket socket = null;
             InputStream input = null;
             OutputStream output = null;
             try {
                 socket = serverSocket.accept();
-                System.out.println("Aceitou conexão com o servidor da camada fisica");
+                System.out.println("Conexão com a camada de transporte aceita");
                 while (true) {
                     try {
+                        //cria objeto para enviar e receber dados do socket
                         input = socket.getInputStream();
                         output = socket.getOutputStream();
 
-                        // Realiza o parse da requisição recebida
+                        // converte de stream para string os dados recebidos da camada de transporte
                         String requestString = convertStreamToString(input);
                         String saida = requestString;
-                        /*System.out.println("Conexão recebida. Conteúdo em binário:\n" + requestString);
-                         System.out.println("Conexão recebida. Conteúdo em texto:\n\n" + saida + "\n\n");*/
-                        System.out.println("Conteudo recebido: \n\n " + saida + "\n\n" + requestString + "\n\n");
+                        System.out.println("Mensagem recebida da camada de transporte: \n\n" + saida + "\n\n");
                         escritor("pacote_recebido.txt", requestString);
-                        //escritor("respostaDaFisicaEmTextoSA.txt",saida);                                
+                        
+                        // Realiza o parse da requisição recebida pela camada de transporte                              
                         Request request = new Request();
                         request.parse(saida);
-
-                        // recupera a resposta de acordo com a requisicao
+                        
+                        // cria a resposta de acordo com a requisicao recebida
                         Response response = new Response(request);
                         String responseString = response.respond();
-                        System.out.println("Resposta enviada. Conteúdo:\n" + responseString);
-                        escritor("resposta.txt", responseString);
+                        System.out.println("Mensagem enviada para a camada de trasnporte:\n" + responseString);
 
+                        escritor("resposta.txt", responseString);
+                        //envia resposta para a camada de transporte
                         output.write(responseString.getBytes());
                     } catch (IndexOutOfBoundsException e) {
                         break;
                     }
-                    // Fecha a conexão
                 }
-                //socket.close();
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "Erro ao executar servidor!", e);
                 continue;
             } finally {
                 try {
+                    //fecha conexao
                     if (socket != null) {
                         socket.close();
                     }
@@ -126,7 +120,7 @@ public class HttpServer {
         buffWrite.append(dados + "\n");
         buffWrite.close();
     }
-
+    //funcao que converte de stream para string
     private String convertStreamToString(InputStream is) {
         if (is != null) {
             Writer writer = new StringWriter();
@@ -146,9 +140,6 @@ public class HttpServer {
     }
 
     public static void main(String[] args) {
-        //Scanner reader = new Scanner(System.in);  
-        //System.out.println("Qual o endereco?");
-                /*String ip = reader.nextLine();*/
         HttpServer server = new HttpServer("localhost", 5555);
         server.serve();
     }
