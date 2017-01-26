@@ -21,7 +21,7 @@ class Cliente
 		puts "Conexão da camada de rede aceita"
 		@origemPorta = ""
 		@destinoPorta = ""
-		@destinoIP2 = ""
+		@ipRoteador = ""
 	end
 
 	#funcao que retorna o mac address do destino, usa shell (arp)
@@ -81,7 +81,7 @@ class Cliente
 		while @sock==0
       begin
 			#tenta abrir conexão com o roteador
-			@sock = TCPSocket.open(@destinoIP2, 5553)
+			@sock = TCPSocket.open(@ipRoteador, 5553)
 			rescue
 				@sock=0
         sleep 1
@@ -118,7 +118,7 @@ class Cliente
 			#desconverte de binario
 			pacote =dados.unpack("B*")[0].to_s
 			#le o arquivo da camada de rede para que o quadro seja encaminhado ao roteador(cliente fisica,roteador,servidor fisico)certo
-			@destinoIP2=File.open("CamadaRede/nexthop1", 'r').gets.chomp
+			@ipRoteador=File.open("CamadaRede/nexthop1", 'r').gets.chomp
 			conectaServidor()
 	#		if @msg.include?"1110111"
 	#			tmq = pedirTMQ()
@@ -141,9 +141,8 @@ class Cliente
 
 	   	#usado para sincronizar o emissor ao clock do remetente
 			preambulo = "1010101010101010101010101010101010101010101010101010101010101011"
-	   	#tipo indica o protocolo da camada superior e deve ser formatado para binario
-			#FALTA ARRUMAR AQUI, O TIPO TEM QUE SER O PROTOCOLO DA CAMADA SUPERIOR
-			type=  converteHexToBin("0800")
+	   	#tipo indica o protocolo da camada superior e deve ser formatado para binario, 201 em hexa é 513 em binario
+			type=  converteHexToBin("0201")
 	    #checksum utilizado para deteccao de erros
 			crc = converteHexToBin(Digest::CRC32.hexdigest("#{pacote}"))
 
