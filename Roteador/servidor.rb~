@@ -66,8 +66,6 @@ class Servidor
 	  senhaC = File.open("Roteador/clienteSenha.txt", 'r')
 	  senhaCliente= senhaC.gets	
 	  cipher = Gibberish::AES.new("teste")
-	  puts mensagem
- 	  gets
 	  dados = cipher.decrypt(mensagem)	
           puts "\nQuadro recebido da camada fisica: #{dados} "
           #separa o quadro recebido
