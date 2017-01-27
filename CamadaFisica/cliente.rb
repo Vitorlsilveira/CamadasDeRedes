@@ -78,7 +78,7 @@ class Cliente
 		puts "Aguardando roteador ficar disponivel na porta 5553!"
 		@sock = 0
 		#loop para aguardar o roteador ficar disponivel
-		while @sock==0
+		while @sock == 0
       begin
 			#tenta abrir conexão com o roteador
 			@sock = TCPSocket.open(@destinoIP2, 5553)
@@ -120,12 +120,12 @@ class Cliente
 			#le o arquivo da camada de rede para que o quadro seja encaminhado ao roteador(cliente fisica,roteador,servidor fisico)certo
 			@destinoIP2=File.open("CamadaRede/nexthop1", 'r').gets.chomp
 			conectaServidor()
-	#		if @msg.include?"1110111"
-	#			tmq = pedirTMQ()
-	#			@client.puts tmq
-	#			dados = client.gets
-	#			pacote = dados.unpack("B*")[0].to_s
-	#		end
+			#		if @msg.include?"1110111"
+			#			tmq = pedirTMQ()
+			#			@client.puts tmq
+			#			dados = client.gets
+			#			pacote = dados.unpack("B*")[0].to_s
+			#		end
 
 			#pega o mac do destino
 			macDestino = get_mac_address(@destinoIP)
