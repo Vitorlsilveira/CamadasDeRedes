@@ -5,7 +5,7 @@ require 'socket'
 
 class Cliente
 	def initialize()
-		#le do arquivo config as configurações necessarias para a camada fisica, como interface e ip de destino
+		#le do arquivo config as configuraçoes necessarias para a camada fisica, como interface e ip de destino
 		file = File.open("Roteador/config", 'r')
 		#abre a porta 2222 do servidor para que algum cliente se conecte nele
 		@server=TCPServer.open(2222)
@@ -14,11 +14,11 @@ class Cliente
 		#pega o IP de destino e a interface utiliza pelo arquivo config
 		@destinoIP=file.gets
 		@interface=file.gets
-		#variaveis que serão usadas para armazenar quadro e o socket cliente(que aguarda conexao de um cliente)
+		#variaveis que serao usadas para armazenar quadro e o socket cliente(que aguarda conexao de um cliente)
 		@msg = ""
-		puts "Aguardando conexões da camada de rede do roteador na porta 2222"
+		puts "Aguardando conexoes da camada de rede do roteador na porta 2222"
 		@client=@server.accept
-		puts "Conexão da camada de rede do roteador aceita"
+		puts "Conexao da camada de rede do roteador aceita"
 		@origemPorta = ""
 		@destinoPorta = ""
 	end
@@ -71,7 +71,7 @@ class Cliente
 		return saida
 	end
 
-	#funcao que estabelece conexão com a camada fisica
+	#funcao que estabelece conexao com a camada fisica
 	def conectaServidor()
 		#tenta conectar ate conseguir
 		puts "Aguardando camada fisica ficar disponivel na porta 5554"
@@ -79,7 +79,7 @@ class Cliente
 		#loop para aguardar a camada fisica ficar disponivel
 		while @sock==0
       begin
-			#tenta abrir conexão com a camada fisica
+			#tenta abrir conexao com a camada fisica
 			@sock = TCPSocket.open(@destinoIP, 5554)
 			rescue
 				@sock=0
