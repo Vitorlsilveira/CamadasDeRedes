@@ -213,6 +213,11 @@ class ServidorTCP {
     mensagemE="";
     mensagemER="";
 
+
+    /*Lendo TMQ atraves do arquivo de configuacao*/
+    File file = File("CamadaTransporte/tmq", "r");
+    string tmq = file.readln();
+
     /*Estabelecimento de conexão de 3 vias - handshake*/
     dadoslenR = servidor.receive(dadosR);
     writeln("Estabelecimento de conexao (Handshake)");
