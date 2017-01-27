@@ -1,7 +1,7 @@
 require "readline"
 require 'digest/crc32'
 require 'socket'
-
+require "gibberish"
 
 class Cliente
 	def initialize()
@@ -120,12 +120,6 @@ class Cliente
 			#le o arquivo da camada de rede para que o quadro seja encaminhado ao roteador(cliente fisica,roteador,servidor fisico)certo
 			@ipRoteador=File.open("CamadaRede/nexthop1", 'r').gets.chomp
 			conectaServidor()
-	#		if @msg.include?"1110111"
-	#			tmq = pedirTMQ()
-	#			@client.puts tmq
-	#			dados = client.gets
-	#			pacote = dados.unpack("B*")[0].to_s
-	#		end
 
 			#pega o mac do destino
 			macDestino = get_mac_address(@destinoIP)
@@ -175,10 +169,21 @@ class Cliente
 
 			#escreve em um arquivo o quadro ethernet
 			File.write("quadro.txt", quadro)
+
+			#criptografa o quadro com a chave lida do arquivo
+			criptografia = File.open("CamadaFisica/chaveCliente.txt",'r')
+			chave = criptografia.gets
+			cipher = Gibberish::AES.new("teste")
+			quadro1 = cipher.encrypt(quadro)
+			puts quadro1
+			puts quadro1[-1]
 			#Agora vamos enviar o quadro para o roteador
-			@sock.puts quadro
+			@sock.puts quadro1
+
 			#roteador tras a resposta do servidor
-			resp = @sock.gets
+			respostaCriptografada = @sock.gets
+			#descriptografar o quadro recebido do roteador
+			resp = cipher.decrypt(respostaCriptografada)
 			puts "\nQuadro recebido da camada fisica do roteador: #{resp} "
 			#separa o quadro recebido
 			preambulo = resp[0..63]
