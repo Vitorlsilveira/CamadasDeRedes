@@ -91,18 +91,6 @@ class Cliente
 		puts "Conectado a camada fisica do roteador"
 	end
 
-	#funcao que pede o TMQ ao servidor da camada fisica
-	#FALTA ARRUMAR
-	def pedirTMQ()
-		#pergunta ao servidor qual sera o tamanho maximo do quadro
-		#@sock.puts("Qual o tamanho maximo do quadro(TMQ) ?\000", 0)
-		@sock.puts "1110111"
-		tamanhoQuadroBytes = @sock.gets
-		puts "TMQ = #{tamanhoQuadroBytes}"
-		return tamanhoQuadroBytes
-	end
-
-
 	def executar()
 		#Lendo dados da camada de REDE
 		dados = ""
@@ -141,7 +129,7 @@ class Cliente
 			crc = converteHexToBin(Digest::CRC32.hexdigest("#{pacote}"))
 
 			#imprime o frame ethernet (Quadro)
-			quadro = preambulo+macDestinoBinario+macOrigemBinario+type+pacote+crc
+			quadro = preambulo+macDestinoBinario+macOrigemBinario+type
 			puts "\nQuadro enviado para a camada fisica: #{quadro}"
 			#imprime preambulo
 			puts "Pre ambulo: #{preambulo}"
@@ -153,53 +141,56 @@ class Cliente
 			puts "Mac do remetente em binario: #{macOrigemBinario}"
 			#imprime type
 			puts "Type: #{type}"
-			#imprime dados
-			puts "Dados: #{pacote}"
 			#imprime CRC
 			puts "CRC = #{crc}"
+			#imprime dados
+			puts "Dados: #{pacote}"
 			#imprime o tamanho de cada item do cabeçalho da camada fisica
 			puts "Tamanho do preambulo : #{preambulo.size.to_f/8}"
 			puts "Tamanho do macDestinoBinario : #{macDestinoBinario.size.to_f/8}"
 			puts "Tamanho do macOrigemBinario : #{macOrigemBinario.size.to_f/8}"
 			puts "Tamanho do type : #{type.size.to_f/8}"
-			puts "Tamanho do pacote : #{pacote.size.to_f/8}"
 			puts "Tamanho do crc : #{crc.size.to_f/8}"
+			puts "Tamanho do pacote : #{pacote.size.to_f/8}"
 			puts "Tamanho do quadro : #{quadro.size.to_f/8}"
 
+			#criptografa os dados
+			arquivo = File.open("CamadaFisica/chaveCliente.txt",'r')
+			chave = arquivo.gets.chomp
+			criptografia = Gibberish::AES.new(chave)
+			pacoteC = criptografia.encrypt(pacote)
+			quadro= quadro + pacoteC + crc
 
 			#escreve em um arquivo o quadro ethernet
 			File.write("quadro.txt", quadro)
 
-			#criptografa o quadro com a chave lida do arquivo
-			criptografia = File.open("CamadaFisica/chaveCliente.txt",'r')
-			chave = criptografia.gets
-			cipher = Gibberish::AES.new("teste")
-			quadro1 = cipher.encrypt(quadro)
-			puts quadro1
-			puts quadro1[-1]
 			#Agora vamos enviar o quadro para o roteador
-			@sock.puts quadro1
+			@sock.puts quadro
 
 			#roteador tras a resposta do servidor
-			respostaCriptografada = @sock.gets
-			#descriptografar o quadro recebido do roteador
-			resp = cipher.decrypt(respostaCriptografada)
+			resp = @sock.gets
 			puts "\nQuadro recebido da camada fisica do roteador: #{resp} "
 			#separa o quadro recebido
 			preambulo = resp[0..63]
 			macDestino = converteBinToHex(resp[64..111])
 			macOrigem = converteBinToHex(resp[112..159])
 			type = resp[160..175].to_i(2)
-			data = resp[176..resp.size-34]
+			dadoCriptografado = resp[176..resp.size-34]
 			crc = converteBinToHex(resp[resp.size-33..resp.size-1])
+
+			#descriptografa a mensagem criptografada
+			descriptografia = Gibberish::AES.new(chave)
+			data = descriptografia.decrypt(dadoCriptografado)
+
 			#imprime o quadro recebido
 			puts "Preambulo : #{preambulo}"
 			puts "Mac Destino : #{macDestino}"
 			puts "Mac Origem : #{macOrigem}"
 			puts "Type : #{type}"
+			puts "Crc : #{crc}"
 			puts "Pacote : #{[data].pack("B*")}"
 			puts "Tamanho do pacote = #{[data].pack("B*").size}"
-			puts "Crc : #{crc}"
+
 			#escreve num arquivo os dados recebidos
 			File.write("quadro_resposta_recebido.txt", data)
 			#envia para a camada de rede o pacote recebido

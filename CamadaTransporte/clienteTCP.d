@@ -28,6 +28,7 @@ class ClienteTCP {
   int numeroSequenciaD,numeroSequenciaR;
   int numeroReconhecimentoD;
   char bitsControleD;
+  int TMQ;
   int janelaD;
   int comprimentoCabecalhoD;
   ushort checksumD;
@@ -39,10 +40,9 @@ class ClienteTCP {
 
   string segmento;
 
-  this (int portaOrigem, int portaDestino, int MSS){
+  this (int portaOrigem, int portaDestino){
     this.portaOrigem = portaOrigem;
     this.portaDestino = portaDestino;
-    this.MSS=MSS;
     bufferRemetente="";
   }
 //codifica bits de controle
@@ -146,16 +146,7 @@ class ClienteTCP {
 
 //envia o segmento para a camada de rede
   void enviaRede(char[] dadosA, long dadoslenA){
-    //calcula o numero de segmentos necessarios levando em consideração a MSS e o tamanho dos dados a serem enviados
-    tamDados=MSS-18;
-    int numSegmentos=cast(int)(dadoslenA/tamDados);
-    long restoDivisao= cast(long)(dadoslenA % tamDados);
-    //cria um numero de sequencia inicial aleatorio
-    numeroSequencia=uniform(0,100);
-    int fimParcial=tamDados;
-    int aux=0;
-    int i=0;
-    janela=numSegmentos;
+
     writeln("Estabelecimento de conexao (Handshake)");
     /*Estabelecimento de conexão de 3 vias- handshake*/
     codifica("00000010");
@@ -167,6 +158,23 @@ class ClienteTCP {
     writeln("\nSegmento recebido da camada de rede: \n" ~dadosR[0..dadoslenR]);
     separaSegmento(cast(char*)dadosR,dadoslenR);
     numeroReconhecimento=numeroSequenciaD+1;
+
+    //printa o TMQ, como decisão de implementação colocamos que o TMQ vem da camada de transporte pelo campo janela no primeiro segmento vindo do servidor
+    write("TMQ é : ");
+    writeln(TMQ);
+    getchar();
+    //calcula o numero de segmentos necessarios levando em consideração a MSS e o tamanho dos dados a serem enviados
+    MSS=TMQ-20-26;
+    tamDados=MSS-18;
+    int numSegmentos=cast(int)(dadoslenA/tamDados);
+    long restoDivisao= cast(long)(dadoslenA % tamDados);
+    //cria um numero de sequencia inicial aleatorio
+    numeroSequencia=uniform(0,100);
+    int fimParcial=tamDados;
+    int aux=0;
+    int i=0;
+    janela=numSegmentos;
+
     if(numSegmentos>=0){
         while(i<numSegmentos){
           codifica("00010000");
@@ -310,6 +318,10 @@ class ClienteTCP {
     writeln("Comprimento cabecalho: "~to!string(comprimentoCabecalhoD));
     checksumD=cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[16..18]);
     writeln("Checksum: "~to!string(checksumD));
+    if(TMQ==0){
+      TMQ=janelaD;
+      return;
+    }
     if(tam>=19){
       mensagemD=dados[19..tam];
       mensagemE=to!string(mensagemD);
@@ -343,7 +355,7 @@ class ClienteTCP {
 void main() {
     //porta de origem é o pid do processo em execucao
     const port = thisProcessID;
-    auto cliente = new ClienteTCP(port, 5555,28);
+    auto cliente = new ClienteTCP(port, 5555);
 
     cliente.executa();
 }

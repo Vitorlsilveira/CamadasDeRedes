@@ -44,13 +44,12 @@ class ServidorTCP {
   bool conectado = false;
   Socket listener, servidor, socket;
 
-  this(int MSS){
+  this(){
     //cria socket para que a camada de rde se conecte a camada de transporte na porta 6768
     listener = new Socket(AddressFamily.INET, SocketType.STREAM);
     listener.bind(new InternetAddress("localhost", 6768));
     listener.listen(10);
     bufferDestinatario="";
-    this.MSS=MSS;
   }
 
 //codifica bits de controle
@@ -214,6 +213,20 @@ class ServidorTCP {
     mensagemER="";
 
     /*Estabelecimento de conexão de 3 vias - handshake*/
+    auto f = File("TMQ.txt");
+    string buffer;
+    foreach (line ; f.byLine) {
+        buffer ~= line;
+    }
+    f.close();
+    int TMQ=to!int(buffer);
+    if(TMQ<66){
+      writeln("TMQ muito baixo, não cobre nem os cabeçalhos da camada de transporte,rede e fisica");
+      getchar();
+    }
+    MSS=TMQ-20-26;
+    tamDados=MSS-18;
+
     dadoslenR = servidor.receive(dadosR);
     writeln("Estabelecimento de conexao (Handshake)");
     writeln("\nSegmento recebido da camada de rede: \n" ~dadosR[0..dadoslenR]);
@@ -223,7 +236,7 @@ class ServidorTCP {
     numeroReconhecimento=numeroSequenciaD+1;
     codifica("00010010");
     writeln("\nSegmento enviado para a camada de rede: ");
-    criaSegmento(portaOrigem,portaDestino,janelaD,18,numeroSequencia,numeroReconhecimento,bitsControle,cast(char*)dadosR[0..0],0);
+    criaSegmento(portaOrigem,portaDestino,TMQ,18,numeroSequencia,numeroReconhecimento,bitsControle,cast(char*)dadosR[0..0],0);
     servidor.send(segmento);
     while(1){
       count++;
@@ -275,7 +288,6 @@ class ServidorTCP {
     writeln("\nMensagem recebida da camada de aplicação: " ~dados[0 .. dadoslen]);
     //encaminha resposta pra Rede
     //calcula o numero de segmentos necessarios levando em consideração a MSS e o tamanho dos dados a serem enviados
-    tamDados=MSS-18;
     long dadoslenA=dadoslen;
     dadosA=dados;
     int numSegmentos=cast(int)(dadoslenA/tamDados);
@@ -382,7 +394,7 @@ class ServidorTCP {
 }
 
 void main() {
-  auto servidor = new ServidorTCP(38);
+  auto servidor = new ServidorTCP();
   while(true) {
     servidor.recebeRede();
   }

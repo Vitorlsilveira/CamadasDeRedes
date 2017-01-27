@@ -1,7 +1,7 @@
 require "readline"
 require 'digest/crc32'
 require 'socket'
-
+require "gibberish"
 
 class Cliente
 	def initialize()
@@ -90,17 +90,6 @@ class Cliente
 		puts "Conectado a camada fisica"
 	end
 
-	#funcao que pede o TMQ ao servidor da camada fisica
-	#FALTA ARRUMAR
-	def pedirTMQ()
-		#pergunta ao servidor qual sera o tamanho maximo do quadro
-		#@sock.puts("Qual o tamanho maximo do quadro(TMQ) ?\000", 0)
-		@sock.puts "1110111"
-		tamanhoQuadroBytes = @sock.gets
-		puts "TMQ = #{tamanhoQuadroBytes}"
-		return tamanhoQuadroBytes
-	end
-
 
 	def executar()
 		dados = ""
@@ -135,13 +124,12 @@ class Cliente
 	   	#usado para sincronizar o emissor ao clock do remetente
 			preambulo = "1010101010101010101010101010101010101010101010101010101010101011"
 	   	#tipo indica o protocolo da camada superior e deve ser formatado para binario
-			#FALTA ARRUMAR AQUI, O TIPO TEM QUE SER O PROTOCOLO DA CAMADA SUPERIOR
-			type=  converteHexToBin("0800")
+			type=  converteHexToBin("0201")
 	    #checksum utilizado para deteccao de erros
 			crc = converteHexToBin(Digest::CRC32.hexdigest("#{pacote}"))
 
 			#imprime o frame ethernet (Quadro)
-			quadro = preambulo+macDestinoBinario+macOrigemBinario+type+pacote+crc
+			quadro = preambulo+macDestinoBinario+macOrigemBinario+type
 			puts "\nQuadro enviado para a camada fisica: #{quadro}"
 			#imprime preambulo
 			puts "Pre ambulo: #{preambulo}"
@@ -153,21 +141,29 @@ class Cliente
 			puts "Mac do remetente em binario: #{macOrigemBinario}"
 			#imprime type
 			puts "Type: #{type}"
-			#imprime dados
-			puts "Dados: #{pacote}"
 			#imprime CRC
 			puts "CRC = #{crc}"
+			#imprime dados
+			puts "Dados: #{pacote}"
 			#imprime o tamanho de cada item do cabeçalho da camada fisica
 			puts "Tamanho do preambulo : #{preambulo.size.to_f/8}"
 			puts "Tamanho do macDestinoBinario : #{macDestinoBinario.size.to_f/8}"
 			puts "Tamanho do macOrigemBinario : #{macOrigemBinario.size.to_f/8}"
 			puts "Tamanho do type : #{type.size.to_f/8}"
-			puts "Tamanho do pacote : #{pacote.size.to_f/8}"
 			puts "Tamanho do crc : #{crc.size.to_f/8}"
+			puts "Tamanho do pacote : #{pacote.size.to_f/8}"
 			puts "Tamanho do quadro : #{quadro.size.to_f/8}"
+
+			#criptografa os dados
+			arquivo = File.open("Roteador/chaveServidor.txt",'r')
+			chave = arquivo.gets.chomp
+			criptografia = Gibberish::AES.new(chave)
+			pacoteC = criptografia.encrypt(pacote)
+			quadro= quadro + pacoteC + crc
 
 			#escreve em um arquivo o quadro ethernet
 			File.write("quadro_roteador.txt", quadro)
+
 			#Agora vamos enviar o quadro para a camada fisica
 			@sock.puts quadro
 			#recebe resposta da camada fisica
@@ -178,16 +174,21 @@ class Cliente
 			macDestino = converteBinToHex(resp[64..111])
 			macOrigem = converteBinToHex(resp[112..159])
 			type = resp[160..175].to_i(2)
-			data = resp[176..resp.size-34]
+			dadoCriptografado = resp[176..resp.size-34]
 			crc = converteBinToHex(resp[resp.size-33..resp.size-1])
+
+			#descriptografa a mensagem criptografada
+			descriptografia = Gibberish::AES.new(chave)
+			data = descriptografia.decrypt(dadoCriptografado)
 			#imprime o quadro recebido
 			puts "Preambulo : #{preambulo}"
 			puts "Mac Destino : #{macDestino}"
 			puts "Mac Origem : #{macOrigem}"
 			puts "Type : #{type}"
+			puts "Crarquivocrc}"
 			puts "Pacote : #{[data].pack("B*")}"
 			puts "Tamanho do pacote = #{[data].pack("B*").size}"
-			puts "Crc : #{crc}"
+
 			#escreve num arquivo os dados recebidos
 			File.write("quadro_roteador_resposta_recebido.txt", data)
 			#envia para a camada de rede do roteador os dados recebidos
