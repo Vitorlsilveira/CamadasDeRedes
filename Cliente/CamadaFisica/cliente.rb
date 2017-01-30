@@ -110,7 +110,7 @@ class Cliente
 			conectaServidor()
 
 			#pega o mac do destino
-			macDestino = get_mac_address(@destinoIP)
+			macDestino = get_mac_address(@ipRoteador)
 			#pega o mac do remetente de acordo com a interface usada
 			macOrigem = getMyMacAddress
 	   	#Formata os MAC address retirando o dois pontos
