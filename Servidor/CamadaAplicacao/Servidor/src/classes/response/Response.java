@@ -31,20 +31,6 @@ public class Response{
 
         //cria a resposta da requisiçao
 	public String respond() {
-		StringBuilder sb = new StringBuilder();
-		// Cria primeira linha do status code, no caso sempre 200 OK
-		sb.append("HTTP/1.1 200 OK").append("\r\n");
-		
-		// Cria os cabeçalhos
-		sb.append("Date: ").append(HTTP_DATE_FORMAT.format(new Date()))
-				.append("\r\n");
-		sb.append("Server: Servidor dos Maneis")
-				.append("\r\n");
-		sb.append("Connection: Close").append("\r\n");
-		sb.append("Content-Type: text/html; charset=UTF-8").append("\r\n");
-		sb.append("\r\n");
-		
-                
                 // Agora vem o corpo em HTML
                 // Devemos carregar o arquivo desejado pelo cliente na resposta
                 try {
@@ -53,8 +39,37 @@ public class Response{
                 } catch (IOException ex) {
                     Logger.getLogger(Response.class.getName()).log(Level.SEVERE, null, ex);
                 }
+                
+                StringBuilder sb = new StringBuilder();
+                // Cria primeira linha do status code
+                if(this.content == null) {
+                    sb.append("HTTP/1.1 404 Not Found").append("\r\n");
+                } else {
+                    sb.append("HTTP/1.1 200 OK").append("\r\n");
+                }
+		// Cria os cabeçalhos
+		sb.append("Date: ").append(HTTP_DATE_FORMAT.format(new Date()))
+				.append("\r\n");
+		sb.append("Server: Servidor dos Maneis")
+				.append("\r\n");
+		sb.append("Connection: Close").append("\r\n");
+		sb.append("Content-Type: text/html; charset=UTF-8").append("\r\n");
+		sb.append("\r\n");
                 //anexa o corpo html na resposta da requisicao
-                sb.append(this.content);
+                if(this.content == null) {
+                    sb.append("< !DOCTYPE HTML>\n" +
+                            "<html>\n" +
+                            "  <head>\n" +
+                            "    <meta charset=\"utf-8\"/>\n" +
+                            "    <title>404 - this page does not exist</title>\n" +
+                            "  </head>\n" +
+                            "  <body>\n" +
+                            "    <p>The page "+ request.getUri().substring(1) +" was not found</p>\n"+
+                            "  </body>\n" +
+                            "</html>");
+                } else {
+                    sb.append(this.content);
+                }
 		sb.append("\r\n");
 		//retorna resposta da requisiçao recebida
 		return sb.toString();
