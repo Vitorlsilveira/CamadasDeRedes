@@ -103,11 +103,11 @@ class ClienteTCP {
     }
 //recebe dados da camada de aplicacao
   void recebeAplicacao(){
-    writeln("Aguardando conexões da camada de aplicaçao na porta 3333");
+    writeln("Aguardando conexoes da camada de aplicaçao na porta 3333");
     cliente = listener.accept();
     writeln("Conexao da camada de aplicacao aceita");
     dadoslen = cliente.receive(dados);
-    writeln("Mensagem recebida da camada de aplicação: " ~dados[0 .. dadoslen]);
+    writeln("Mensagem recebida da camada de aplicaçao: " ~dados[0 .. dadoslen]);
   }
 
 //conecta-se a camada de rede
@@ -148,7 +148,7 @@ class ClienteTCP {
   void enviaRede(char[] dadosA, long dadoslenA){
 
     writeln("Estabelecimento de conexao (Handshake)");
-    /*Estabelecimento de conexão de 3 vias- handshake*/
+    /*Estabelecimento de conexao de 3 vias- handshake*/
     codifica("00000010");
     writeln("\nSegmento enviado para a camada de rede: ");
     criaSegmento(portaOrigem,portaDestino,janela,18,numeroSequencia,numeroReconhecimento,bitsControle,cast(char*)dadosR[0..0],0);
@@ -159,11 +159,11 @@ class ClienteTCP {
     separaSegmento(cast(char*)dadosR,dadoslenR);
     numeroReconhecimento=numeroSequenciaD+1;
 
-    //printa o TMQ, como decisão de implementação colocamos que o TMQ vem da camada de transporte pelo campo janela no primeiro segmento vindo do servidor
+    //printa o TMQ, como decisao de implementaçao colocamos que o TMQ vem da camada de transporte pelo campo janela no primeiro segmento vindo do servidor
     write("TMQ é : ");
     writeln(TMQ);
     
-    //calcula o numero de segmentos necessarios levando em consideração a MSS
+    //calcula o numero de segmentos necessarios levando em consideraçao a MSS
     MSS=TMQ-20-26;
     tamDados=MSS;
     int numSegmentos=cast(int)(dadoslenA/tamDados);
@@ -189,7 +189,7 @@ class ClienteTCP {
           separaSegmento(cast(char*)dadosR,dadoslenR);
           portaOrigem=portaDestinoD;
           portaDestino=portaOrigemD;
-          //writeln("Recebi confirmação do segmento acima: " ~ to!string(numeroReconhecimentoD));
+          //writeln("Recebi confirmaçao do segmento acima: " ~ to!string(numeroReconhecimentoD));
           numeroReconhecimento=numeroSequenciaD+1;
           numeroSequencia=numeroSequencia+MSS;
         }
@@ -227,8 +227,8 @@ class ClienteTCP {
       portaDestino=portaOrigemD;
 
       if(vetorControle[1]=='1'){
-        /*começa fechar conexão*/
-        writeln("\nFechamento de conexão: ");
+        /*começa fechar conexao*/
+        writeln("\nFechamento de conexao: ");
         numeroSequenciaR=numeroSequenciaR+1;
         numeroReconhecimentoR=numeroSequenciaD+1;
         mensagem=cast(char[])bufferRemetente;
@@ -246,7 +246,7 @@ class ClienteTCP {
       socket.send(segmento);
     }
 
-    /*Continua fechamento de conexão*/
+    /*Continua fechamento de conexao*/
     dadoslenR = socket.receive(dadosR);
     writeln("\nSegmento recebido da camada de rede: \n" ~dadosR[0..dadoslenR]);
     separaSegmento(cast(char*)dadosR,dadoslenR);
@@ -270,7 +270,7 @@ class ClienteTCP {
     criaSegmento(portaOrigem,portaDestino,janelaD,18,numeroSequencia,numeroReconhecimento,bitsControle,cast(char*)dadosR[0..0],0);
     socket.send(segmento);
     dadoslenR = socket.receive(dadosR);
-    writeln("\nMensagem enviada para a camada de aplicação: ");
+    writeln("\nMensagem enviada para a camada de aplicaçao: ");
     writeln(mensagem);
   }
 //cria segmento

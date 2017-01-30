@@ -17,7 +17,7 @@ while True:
     try:
         sockfisico = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # Cria o descritor do socket
         sockfisico.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sockfisico.connect(("localhost", 9999)) # Realiza a conexão no host e porta definidos
+        sockfisico.connect(("localhost", 9999)) # Realiza a conexao no host e porta definidos
         break
     except:
         continue
@@ -63,17 +63,17 @@ def recebe_transporte(port):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # Cria o descritor do socket
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.bind(("localhost", port)) # Associa o endereço e porta ao descritor do socket.
-    sock.listen(10) # Tamanho maximo da fila de conexões pendentes
-    print("Aguardando conexões da camada de transporte na porta "+str(port))
+    sock.listen(10) # Tamanho maximo da fila de conexoes pendentes
+    print("Aguardando conexoes da camada de transporte na porta "+str(port))
     (con, address) = sock.accept() # aceita conexoes e recupera o endereco do cliente.
-    print("Conexão da camada de transporte aceita")
+    print("Conexao da camada de transporte aceita")
 
     while True:
         # recebe segmento da camada de transporte
         segmento = con.recv(BUFFER_SIZE) # Recebe uma mensagem do tamanho BUFFER_SIZE
         if len(str(segmento)) >= 0:
             print("Segmento recebido da camada de transporte: " + segmento)
-            #carrega o arquivo de configuração para pegar o ip de destino e a interface
+            #carrega o arquivo de configuraçao para pegar o ip de destino e a interface
             fil = open("config")
             fo = fil.readlines()
             #att a variavel global ip de destino

@@ -1,4 +1,4 @@
-Trabalho de implementação das camadas da pilha de protocolos tcp/ip
+Trabalho de implementaçao das camadas da pilha de protocolos tcp/ip
 
 Autores:Andre Dornas,Gabriel Mattar,Vitor Lemos
 
@@ -9,7 +9,7 @@ Ruby
 ####Funcionalidades
 - Transferência de um quadro entre um cliente e um servidor;
 
-####Execução
+####Execuçao
 - Executar em um terminal o código do servidor:
 ```
 ruby server.rb
@@ -18,4 +18,4 @@ ruby server.rb
 ```
 ruby cliente.rb
 ```
-- Seguir as instruções para executar o envio
+- Seguir as instruçoes para executar o envio

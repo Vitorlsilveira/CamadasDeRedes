@@ -16,7 +16,7 @@ import java.util.logging.Logger;
  *
  * @author mattar
  */
-//cria a resposta a ser enviada para a camada de transporte a partir da requisição recebida e formatada
+//cria a resposta a ser enviada para a camada de transporte a partir da requisiçao recebida e formatada
 public class Response{
 
 	private Request request;
@@ -29,7 +29,7 @@ public class Response{
 		this.request = request;
 	}
 
-        //cria a resposta da requisição
+        //cria a resposta da requisiçao
 	public String respond() {
 		StringBuilder sb = new StringBuilder();
 		// Cria primeira linha do status code, no caso sempre 200 OK
@@ -56,7 +56,7 @@ public class Response{
                 //anexa o corpo html na resposta da requisicao
                 sb.append(this.content);
 		sb.append("\r\n");
-		//retorna resposta da requisição recebida
+		//retorna resposta da requisiçao recebida
 		return sb.toString();
 
 	}

@@ -5,7 +5,7 @@ require "gibberish"
 
 class Cliente
 	def initialize()
-		#le do arquivo config as configurações necessarias para a camada fisica, como interface e ip de destino
+		#le do arquivo config as configuraçoes necessarias para a camada fisica, como interface e ip de destino
 		file = File.open("config", 'r')
 		#abre a porta 9999 do servidor para que algum cliente se conecte nele
 		@server=TCPServer.open(9999)
@@ -14,11 +14,11 @@ class Cliente
 		#pega o IP de destino e a interface utiliza pelo arquivo config
 		@destinoIP=file.gets
 		@interface=file.gets
-		#variaveis que serão usadas para armazenar quadro e o socket cliente(que aguarda conexao de um cliente)
+		#variaveis que serao usadas para armazenar quadro e o socket cliente(que aguarda conexao de um cliente)
 		@msg = ""
-		puts "Aguardando conexões da camada de rede na porta 9999"
+		puts "Aguardando conexoes da camada de rede na porta 9999"
 		@client=@server.accept
-		puts "Conexão da camada de rede aceita"
+		puts "Conexao da camada de rede aceita"
 		@origemPorta = ""
 		@destinoPorta = ""
 		@ipRoteador = ""
@@ -72,7 +72,7 @@ class Cliente
 		return saida
 	end
 
-	#funcao que estabelece conexão com o roteador
+	#funcao que estabelece conexao com o roteador
 	def conectaServidor()
 		#tenta conectar ate conseguir
 		puts "Aguardando roteador ficar disponivel na porta 5553!"
@@ -80,7 +80,7 @@ class Cliente
 		#loop para aguardar o roteador ficar disponivel
 		while @sock==0
       begin
-			#tenta abrir conexão com o roteador
+			#tenta abrir conexao com o roteador
 			@sock = TCPSocket.open(@ipRoteador, 5553)
 			rescue
 				@sock=0
@@ -94,7 +94,7 @@ class Cliente
 	def executar()
 		#Lendo dados da camada de REDE
 		dados = ""
-		# espera pela conexão do cliente da camada de rede
+		# espera pela conexao do cliente da camada de rede
 		while true
 			# "Aguardando pacote"
 			dados = ""

@@ -24,18 +24,18 @@ class ClienteUDP {
     this.portaDestino = portaDestino;
   }
 
-//recebe dados da aplicação
+//recebe dados da aplicaçao
   void recebeAplicacao(){
-    //aceita conexão da aplicacao
-    writeln("Aguardando conexões da camada de aplicaçao na porta 3333");
+    //aceita conexao da aplicacao
+    writeln("Aguardando conexoes da camada de aplicaçao na porta 3333");
     cliente = listener.accept();
     writeln("Conexao da camada de aplicacao aceita");
     //recebe da aplicacao
     dadoslen = cliente.receive(dados)-1;
-    writeln("\nMensagem recebida da camada de aplicação: " ~dados[0 .. dadoslen]);
+    writeln("\nMensagem recebida da camada de aplicaçao: " ~dados[0 .. dadoslen]);
   }
 
-// loop de execução
+// loop de execuçao
   void executa() {
     //estabelece conexao com a camada de rede
     conectaRede();
@@ -49,7 +49,7 @@ class ClienteUDP {
       enviaRede(dados, dadoslen);
       recebeRede();
       //envia para a aplicacao
-      writeln("\nMensagem enviada para a camada de aplicação: ");
+      writeln("\nMensagem enviada para a camada de aplicaçao: ");
       writeln(mensagem);
       cliente.send(mensagem);
     }

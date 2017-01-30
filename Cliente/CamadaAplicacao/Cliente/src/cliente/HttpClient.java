@@ -22,7 +22,7 @@ import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 
 /**
- * Cliente HTTP simples para somente requisições GET
+ * Cliente HTTP simples para somente requisiçoes GET
  *
  * @author Thiago Galbiatti Vespa - <a
  *         href="mailto:thiago@thiagovespa.com.br">thiago@thiagovespa.com.br</a>
@@ -34,7 +34,7 @@ public class HttpClient {
     public final static Logger logger = Logger.getLogger(HttpClient.class.toString());
 
     /**
-     * Versão do protocolo utilizada
+     * Versao do protocolo utilizada
      */
     public final static String HTTP_VERSION = "HTTP/1.1";
 
@@ -56,18 +56,18 @@ public class HttpClient {
     }
 
     /**
-     * Realiza uma requisição HTTP e devolve uma resposta
+     * Realiza uma requisiçao HTTP e devolve uma resposta
      *
-     * @param path caminho a ser feita a requisição
+     * @param path caminho a ser feita a requisiçao
      * @return resposta do protocolo HTTP
-     * @throws UnknownHostException quando não encontra o host
-     * @throws IOException quando há algum erro de comunicação
+     * @throws UnknownHostException quando nao encontra o host
+     * @throws IOException quando há algum erro de comunicaçao
      */
     public String getURIRawContent(String path) throws UnknownHostException,
             IOException {
         Socket clientSocket = null;
         try {
-            // Abre a conexão com a camada de transporte
+            // Abre a conexao com a camada de transporte
             System.out.println("Aguardando camada de transporte ficar disponível na porta 3333");
             while (true) {
                 try {
@@ -85,7 +85,7 @@ public class HttpClient {
 
             String req = "";
 
-            // Envia a requisição
+            // Envia a requisiçao
             req += "GET " + path + " " + HTTP_VERSION + "\n";
             req += "Host: " + this.host + "\n";
             req += "Connection: Close;";
@@ -155,7 +155,7 @@ public class HttpClient {
     }
 
     public static void main(String[] args) {
-        //le do arquivo config , o ip de destino, a interface e a requisição
+        //le do arquivo config , o ip de destino, a interface e a requisiçao
         FileReader arq;
         BufferedReader lerArq;
         String ipDest="";

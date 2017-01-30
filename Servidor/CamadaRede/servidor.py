@@ -18,7 +18,7 @@ while True:
     try:
         socktransporte = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # Cria o descritor do socket
         socktransporte.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        socktransporte.connect(("localhost", 6768)) # Realiza a conexão no host e porta definidos
+        socktransporte.connect(("localhost", 6768)) # Realiza a conexao no host e porta definidos
         break
     except:
         continue
@@ -68,13 +68,13 @@ def recebe_fisica(port):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # Cria o descritor do socket
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.bind(("localhost", port)) # Associa o endereço e porta ao descritor do socket.
-    sock.listen(10) # Tamanho maximo da fila de conexões pendentes
+    sock.listen(10) # Tamanho maximo da fila de conexoes pendentes
 
     print("Aguardando conexoes da camada fisica na porta "+str(port))
 
     #aceita conexao
     (con, address) = sock.accept() # aceita conexoes e recupera o endereco do cliente.
-    print("Conexão da camada fisica aceita")
+    print("Conexao da camada fisica aceita")
 
     while True:
         #recebe pacote da fisica

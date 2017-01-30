@@ -18,7 +18,7 @@ while True:
     try:
         sockfisico = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # Cria o descritor do socket
         sockfisico.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sockfisico.connect(("localhost", 2222)) # Realiza a conexão no host e porta definidos
+        sockfisico.connect(("localhost", 2222)) # Realiza a conexao no host e porta definidos
         break
     except:
         continue
@@ -29,14 +29,14 @@ def recebe_fisica(port):
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     # Associa o endereço e porta ao descritor do socket.
     sock.bind(("localhost", port))
-    # Tamanho maximo da fila de conexões pendentes
+    # Tamanho maximo da fila de conexoes pendentes
     sock.listen(10)
 
     print("Aguardando conexoes da camada fisica do roteador: "+str(port))
 
     # aceita conexoes e recupera o endereco do cliente.
     (con, address) = sock.accept()
-    print("Conexão da camada fisica aceita")
+    print("Conexao da camada fisica aceita")
 
     while True:
         # Recebe uma mensagem do tamanho BUFFER_SIZE
@@ -50,7 +50,7 @@ def recebe_fisica(port):
             con.send(resposta)
     con.close()
 
-#separa pacote recebido, para extrair informações sobre o ip de destino e o ip de origem
+#separa pacote recebido, para extrair informaçoes sobre o ip de destino e o ip de origem
 def separaPacote(pacote):
     sourceAdd = str(unpack("B", pacote[12:13])[0])+"."+str(unpack("B", pacote[13:14])[0])+"."+str(unpack("B", pacote[14:15])[0])+"."+str(unpack("B", pacote[15:16])[0])
     destAdd = str(unpack("B", pacote[16:17])[0])+"."+str(unpack("B", pacote[17:18])[0])+"."+str(unpack("B", pacote[18:19])[0])+"."+str(unpack("B", pacote[19:20])[0])

@@ -197,7 +197,7 @@ class ServidorTCP {
   void recebeRede(){
     if(!conectado){
       //aceita conexao da camada de rede
-      writeln("Aguardando conexões da camada de rede na porta 6768");
+      writeln("Aguardando conexoes da camada de rede na porta 6768");
       servidor = listener.accept();
       writeln("Conexao da camada de rede aceita");
       conectado = true;
@@ -212,7 +212,7 @@ class ServidorTCP {
     mensagemE="";
     mensagemER="";
 
-    /*Estabelecimento de conexão de 3 vias - handshake*/
+    /*Estabelecimento de conexao de 3 vias - handshake*/
     auto f = File("TMQ.txt");
     string buffer;
     foreach (line ; f.byLine) {
@@ -221,7 +221,7 @@ class ServidorTCP {
     f.close();
     int TMQ=to!int(buffer);
     if(TMQ<47){
-      writeln("TMQ muito baixo, não cobre nem os cabeçalhos da camada de rede e fisica");
+      writeln("TMQ muito baixo, nao cobre nem os cabeçalhos da camada de rede e fisica");
       getchar();
     }
     MSS=TMQ-20-26;
@@ -267,27 +267,27 @@ class ServidorTCP {
     writeln(mensagem);
     //abre conexao com camada de aplicacao na porta de destino
     socket = new Socket(AddressFamily.INET,  SocketType.STREAM);
-    writeln("Aguardando camada de aplicação ficar disponivel na porta "~to!string(portaDestinoD));
+    writeln("Aguardando camada de aplicaçao ficar disponivel na porta "~to!string(portaDestinoD));
     while(true){
       try {
         //tenta conectar com a camada de aplicacao
         socket.connect(new InternetAddress("localhost", cast(ushort)portaDestinoD));
-        writeln("Conectado a camada de aplicação");
+        writeln("Conectado a camada de aplicaçao");
         break;
       } catch( Exception e ){
         continue;
       }
     }
-    writeln("\nMensagem enviada para a camada de aplicação: ");
+    writeln("\nMensagem enviada para a camada de aplicaçao: ");
     writeln(mensagem);
     // Envia a requisicao pra aplicacao
     socket.send(mensagem);
     //recebe resposta
     dadoslen = socket.receive(dados);
     socket.close();
-    writeln("\nMensagem recebida da camada de aplicação: " ~dados[0 .. dadoslen]);
+    writeln("\nMensagem recebida da camada de aplicaçao: " ~dados[0 .. dadoslen]);
     //encaminha resposta pra Rede
-    //calcula o numero de segmentos necessarios levando em consideração a MSS e o tamanho dos dados a serem enviados
+    //calcula o numero de segmentos necessarios levando em consideraçao a MSS e o tamanho dos dados a serem enviados
     long dadoslenA=dadoslen;
     dadosA=dados;
     int numSegmentos=cast(int)(dadoslenA/tamDados);

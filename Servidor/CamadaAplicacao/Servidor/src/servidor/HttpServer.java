@@ -54,22 +54,22 @@ public class HttpServer {
         //cria socket para que a camada de transporte possa se conectar na porta 5555
         ServerSocket serverSocket = null;
         try {
-            // Cria a conexão servidora
+            // Cria a conexao servidora
             serverSocket = new ServerSocket(port, 10,
                     InetAddress.getByName(host));
         } catch (IOException e) {
             logger.log(Level.SEVERE, "Erro ao iniciar servidor!", e);
             return;
         }
-        // Fica esperando pela conexão cliente
+        // Fica esperando pela conexao cliente
         while (true) {
-            System.out.println("Aguardando conexões da camada de transporte na porta: " + this.port);
+            System.out.println("Aguardando conexoes da camada de transporte na porta: " + this.port);
             Socket socket = null;
             InputStream input = null;
             OutputStream output = null;
             try {
                 socket = serverSocket.accept();
-                System.out.println("Conexão com a camada de transporte aceita");
+                System.out.println("Conexao com a camada de transporte aceita");
                 while (true) {
                     try {
                         //cria objeto para enviar e receber dados do socket
@@ -82,7 +82,7 @@ public class HttpServer {
                         System.out.println("Mensagem recebida da camada de transporte: \n\n" + saida + "\n\n");
                         escritor("CamadaAplicacao/pacote_recebido.txt", requestString);
                         
-                        // Realiza o parse da requisição recebida pela camada de transporte                              
+                        // Realiza o parse da requisiçao recebida pela camada de transporte                              
                         Request request = new Request();
                         request.parse(saida);
                         

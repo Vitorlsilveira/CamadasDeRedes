@@ -29,22 +29,22 @@ class ServidorUDP {
     socket = new Socket(AddressFamily.INET,  SocketType.STREAM);
   }
 
-  //aceita conexão da camada de rede
+  //aceita conexao da camada de rede
   void aceitaConexao(){
-    writeln("Aguardando conexões da camada de rede na porta 6768");
+    writeln("Aguardando conexoes da camada de rede na porta 6768");
     servidor = listener.accept();
     writeln("Conexao da camada de rede aceita");
   }
 
   // envia o segmento para a camada de aplicacao, recebe resposta da aplicacao e encaminha de volta para a camada de rede
   void enviaAplicacao(){
-    writeln("\nMensagem enviada para a camada de aplicação: ");
+    writeln("\nMensagem enviada para a camada de aplicaçao: ");
     writeln(mensagem);
-    // Envia a requisicao pra aplicação
+    // Envia a requisicao pra aplicaçao
     socket.send(mensagem);
-    //recebe resposta da aplicação
+    //recebe resposta da aplicaçao
     dadoslen = socket.receive(dados);
-    writeln("\nMensagem recebida da camada de aplicação: " ~dados[0 .. dadoslen]);
+    writeln("\nMensagem recebida da camada de aplicaçao: " ~dados[0 .. dadoslen]);
     //encaminha resposta pra camada de rede
     enviaRede(dados[0..dadoslen],dadoslen);
 
@@ -78,13 +78,13 @@ class ServidorUDP {
     length = cast(int)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[4..6]);
     checksum = cast(ushort)littleEndianToNative!(ushort,2)(cast(ubyte[2])dados[6..8]);
     //conecta-se a camada de aplicacao na porta de destino
-    writeln("Aguardando camada de aplicação ficar disponivel na porta "~to!string(portaDestino));
+    writeln("Aguardando camada de aplicaçao ficar disponivel na porta "~to!string(portaDestino));
     if(!conectado){
       while(true){
         try {
           socket.connect(new InternetAddress("localhost", cast(ushort)portaDestino));
           conectado=true;
-          writeln("Conectado a camada de aplicação");
+          writeln("Conectado a camada de aplicaçao");
           break;
         } catch( Exception e ){
           continue;

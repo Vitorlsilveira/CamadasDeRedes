@@ -55,11 +55,11 @@ class Servidor
 	end
 
   def executar
-    puts "Aguardando conexões da camada fisica na porta #{@port}"
+    puts "Aguardando conexoes da camada fisica na porta #{@port}"
     #loop para aguardar conexoes com clientes
     loop {
       Thread.start(@server.accept) do |client|
-        puts "Conexão da camada fisica aceita"
+        puts "Conexao da camada fisica aceita"
         while true
           #recebe quadro do cliente fisico pelo roteador
           mensagem = client.gets

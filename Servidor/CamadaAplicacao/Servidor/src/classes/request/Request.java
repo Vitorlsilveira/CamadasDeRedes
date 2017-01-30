@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.io.StringReader;
 
 /**
- * Realiza o parse da requisição recebida
+ * Realiza o parse da requisiçao recebida
  * 
  * @author Thiago Galbiatti Vespa - <a
  *         href="mailto:thiago@thiagovespa.com.br">thiago@thiagovespa.com.br</a>
@@ -20,7 +20,7 @@ public class Request {
 	public Request() {
 	}
 
-	//realiza o parse da requisição recebida
+	//realiza o parse da requisiçao recebida
 	public void parse(String input) throws IOException {
 		BufferedReader br = new BufferedReader(new StringReader(input));
 		String line = null;
