@@ -129,13 +129,13 @@ class Servidor
 
           #enviando resposta para o cliente fisico
 
-          #troca o mac de origem com o mac de destino
-          #aux=macDestino
-          #macDestino=macOrigem
-          #macOrigem=aux
-          @destinoIP=	File.open("CamadaRede/nexthop", 'r').gets.chomp
+          @destinoIP=	File.open("CamadaRede/nexthopServidor", 'r').gets.chomp
           macOrigem = getMyMacAddress
           macDestino = get_mac_address(@destinoIP)
+
+          #Formata os MAC address retirando o dois pontos
+    			macDestino = macDestino.gsub(":","").delete("\n")
+    			macOrigem = macOrigem.gsub(":","").delete("\n")
 
           #transforma os mac para binario
           macDestinoBinario=converteHexToBin(macDestino)
@@ -151,6 +151,12 @@ class Servidor
 
           #imprime o frame ethernet (Quadro)
           quadro = preambulo+macDestinoBinario+macOrigemBinario+type
+
+          #criptografa os dados
+          criptografia = Gibberish::AES.new(chave)
+          pacoteC = criptografia.encrypt(respostaBin)
+          quadro= quadro + pacoteC + crc
+
           puts "\nQuadro enviado para a camada fisica: #{quadro}"
           #imprime preambulo
           puts "Pre ambulo: #{preambulo}"
@@ -175,10 +181,6 @@ class Servidor
           puts "Tamanho do pacote : #{respostaBin.size.to_f/8}"
           puts "Tamanho do quadro : #{quadro.size.to_f/8}"
 
-          #criptografa os dados
-          criptografia = Gibberish::AES.new(chave)
-          pacoteC = criptografia.encrypt(respostaBin)
-          quadro= quadro + pacoteC + crc
           #escreve a resposta num arquivo de resposta
           File.write("CamadaFisica/quadro_resposta.txt", quadro)
           #envia para o cliente fisico a resposta atraves do roteador

@@ -104,9 +104,10 @@ class Servidor
           #descriptografa a mensagem criptografada
           arquivo = File.open("CamadaFisica/Servidor/chaveCliente.txt",'r')
           chave = arquivo.gets.chomp
-	  puts "Aguardando desencriptografia!"
+	        puts "Aguardando desencriptografia!"
           descriptografia = Gibberish::AES.new(chave)
           data = descriptografia.decrypt(dadoCriptografado)
+          
           #imprime o quadro recebido
           puts "Preambulo : #{preambulo}"
       		puts "Mac Destino : #{macDestino}"
@@ -130,13 +131,13 @@ class Servidor
           puts "Resposta em binario:#{respostaBin}"
 
           #enviando resposta para o cliente fisico
-          #troca o mac de origem com o mac de destino
-          #aux=macDestino
-          #macDestino=macOrigem
-          #macOrigem=aux
           @destinoIP=	File.open("CamadaRede/nexthop", 'r').gets.chomp
           macOrigem = getMyMacAddress
           macDestino = get_mac_address(@destinoIP)
+
+          #Formata os MAC address retirando o dois pontos
+    			macDestino = macDestino.gsub(":","").delete("\n")
+    			macOrigem = macOrigem.gsub(":","").delete("\n")
 
           #transforma os mac para binario
           macDestinoBinario=converteHexToBin(macDestino)

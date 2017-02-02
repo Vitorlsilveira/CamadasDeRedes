@@ -125,6 +125,14 @@ class Cliente
 
 			#imprime o frame ethernet (Quadro)
 			quadro = preambulo+macDestinoBinario+macOrigemBinario+type
+
+			#criptografa os dados
+			arquivo = File.open("CamadaFisica/Cliente/chaveServidor.txt",'r')
+			chave = arquivo.gets.chomp
+			criptografia = Gibberish::AES.new(chave)
+			pacoteC = criptografia.encrypt(pacote)
+			quadro= quadro + pacoteC + crc
+
 			puts "\nQuadro enviado para a camada fisica: #{quadro}"
 			#imprime preambulo
 			puts "Pre ambulo: #{preambulo}"
@@ -149,13 +157,6 @@ class Cliente
 			puts "Tamanho do pacote : #{pacote.size.to_f/8}"
 			puts "Tamanho do quadro : #{quadro.size.to_f/8}"
 
-			#criptografa os dados
-			arquivo = File.open("CamadaFisica/Cliente/chaveServidor.txt",'r')
-			chave = arquivo.gets.chomp
-			criptografia = Gibberish::AES.new(chave)
-			pacoteC = criptografia.encrypt(pacote)
-			quadro= quadro + pacoteC + crc
-
 			#escreve em um arquivo o quadro ethernet
 			File.write("CamadaFisica/Cliente/quadro_roteador.txt", quadro)
 
@@ -173,9 +174,10 @@ class Cliente
 			crc = converteBinToHex(resp[resp.size-33..resp.size-1])
 
 			#descriptografa a mensagem criptografada
-		        puts "Aguardando desencriptografia!"
+		  puts "Aguardando desencriptografia!"
 			descriptografia = Gibberish::AES.new(chave)
 			data = descriptografia.decrypt(dadoCriptografado)
+
 			#imprime o quadro recebido
 			puts "Preambulo : #{preambulo}"
 			puts "Mac Destino : #{macDestino}"
