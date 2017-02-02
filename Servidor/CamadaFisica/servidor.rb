@@ -5,10 +5,12 @@ require "gibberish"
 
 class Servidor
   def initialize(port)
+    file = File.open("config", 'r')
     @port=port
     #servidor aguarda conexao na porta port
 		@server=TCPServer.open(port)
     @sock1=nil
+    @interface=file.gets
     #loop para aguardar a camada de rede ficar disponivel
     puts "Aguardando camada de rede ficar disponivel na porta  4444"
 		while @sock1==nil
@@ -21,6 +23,32 @@ class Servidor
 			end
 		end
     @TMQ=1
+	end
+
+  #funcao que retorna o mac address do destino, usa shell (arp)
+	def get_mac_address(ip)
+		begin
+			response = `sh mac.sh #{ip} #{@interface}`
+			mac = response.split()[3]
+			if mac.size < 17
+				raise "MAC nao encontrado"
+			end
+		rescue
+			mac = "00:00:00:00:00:00"
+		end
+		return mac
+	end
+
+	#funcao que retorna o mac address da maquina de origem
+	def getMyMacAddress
+	begin
+		#no arquivo localizado em /sys/class/net/interface/address temos uma linha com o mac de acordo com a interface utilizada
+		caminho="/sys/class/net/#{@interface.chomp}/address"
+		mac = File.open(caminho,'r').gets
+		rescue
+			mac = "00:00:00:00:00:00"
+		end
+	return mac
 	end
 
   #funcao que converte de binario para hexadecimal
@@ -102,9 +130,13 @@ class Servidor
           #enviando resposta para o cliente fisico
 
           #troca o mac de origem com o mac de destino
-          aux=macDestino
-          macDestino=macOrigem
-          macOrigem=aux
+          #aux=macDestino
+          #macDestino=macOrigem
+          #macOrigem=aux
+          @destinoIP=	File.open("CamadaRede/nexthop", 'r').gets.chomp
+          macOrigem = getMyMacAddress
+          macDestino = get_mac_address(@destinoIP)
+
           #transforma os mac para binario
           macDestinoBinario=converteHexToBin(macDestino)
           macOrigemBinario=converteHexToBin(macOrigem)
