@@ -5,17 +5,23 @@ require "gibberish"
 
 class Cliente
 	def initialize()
+		#le do arquivo config as configuraçoes necessarias para a camada fisica, como interface e ip de destino
 		file = File.open("config", 'r')
-		#abre a porta 2222 do servidor para que algum cliente se conecte nele
-		@server=TCPServer.open(2222)
-		@port=2222
+		#abre a porta 9999 do servidor para que algum cliente se conecte nele
+		@server=TCPServer.open(9999)
+		@port=9999
+		@origemIP = "localhost"
+		#pega o IP de destino e a interface utiliza pelo arquivo config
+		@destinoIP=file.gets
 		@interface=file.gets
+		#variaveis que serao usadas para armazenar quadro e o socket cliente(que aguarda conexao de um cliente)
 		@msg = ""
-		puts "Aguardando conexoes da camada de rede do roteador na porta 2222"
+		puts "Aguardando conexoes da camada de rede na porta 9999"
 		@client=@server.accept
-		puts "Conexao da camada de rede do roteador aceita"
+		puts "Conexao da camada de rede aceita"
 		@origemPorta = ""
 		@destinoPorta = ""
+		@ipRoteador = ""
 	end
 
 	#funcao que retorna o mac address do destino, usa shell (arp)
@@ -66,48 +72,47 @@ class Cliente
 		return saida
 	end
 
-	#funcao que estabelece conexao com a camada fisica
+	#funcao que estabelece conexao com o roteador
 	def conectaServidor()
 		#tenta conectar ate conseguir
-		puts "Aguardando camada fisica ficar disponivel na porta 5554"
+		puts "Aguardando roteador ficar disponivel na porta 5553!"
 		@sock = 0
-		#loop para aguardar a camada fisica ficar disponivel
+		#loop para aguardar o roteador ficar disponivel
 		while @sock==0
       begin
-			#tenta abrir conexao com a camada fisica
-			@sock = TCPSocket.open(@destinoIP, 5554)
+			#tenta abrir conexao com o roteador
+			@sock = TCPSocket.open(@ipRoteador, 5553)
 			rescue
 				@sock=0
         sleep 1
 			end
 		end
-	  #ja está conectado a camada fisica
-		puts "Conectado a camada fisica"
+		#ja está conectado ao servidor do roteador
+		puts "Conectado a camada fisica do roteador"
 	end
 
-
 	def executar()
+		#Lendo dados da camada de REDE
 		dados = ""
-
-		# espera pela conexao da camada de rede do roteador
+		# espera pela conexao do cliente da camada de rede
 		while true
+			# "Aguardando pacote"
 			dados = ""
-			#recebe quadro
+			#recebe pacote
 			dados=@client.recv(65536)
-			#imprime o quadro
-			puts "\nQuadro recebido da camada de rede do roteador: #{dados}"
+			#imprime o pacote
+			puts "\nPacote recebido da camada de rede: #{dados}"
 
 			#desconverte de binario
 			pacote =dados.unpack("B*")[0].to_s
-			#le do arquivo nexthop o ip do roteador
-			@destinoIP=	File.open("CamadaRede/nexthop", 'r').gets.chomp
+			#le o arquivo da camada de rede para que o quadro seja encaminhado ao roteador(cliente fisica,roteador,servidor fisico)certo
+			@ipRoteador=File.open("CamadaRede/nexthopCliente", 'r').gets.chomp
 			conectaServidor()
 
 			#pega o mac do destino
-			macDestino = get_mac_address(@destinoIP)
+			macDestino = get_mac_address(@ipRoteador)
 			#pega o mac do remetente de acordo com a interface usada
 			macOrigem = getMyMacAddress
-
 	   	#Formata os MAC address retirando o dois pontos
 			macDestino = macDestino.gsub(":","").delete("\n")
 			macOrigem = macOrigem.gsub(":","").delete("\n")
@@ -119,7 +124,7 @@ class Cliente
 	   	#usado para sincronizar o emissor ao clock do remetente
 			preambulo = "1010101010101010101010101010101010101010101010101010101010101011"
 	   	#tipo indica o protocolo da camada superior e deve ser formatado para binario
-			type=  converteHexToBin("0201")
+			type=  converteHexToBin("0800")
 	    #checksum utilizado para deteccao de erros
 			crc = converteHexToBin(Digest::CRC32.hexdigest("#{pacote}"))
 
@@ -150,20 +155,21 @@ class Cliente
 			puts "Tamanho do quadro : #{quadro.size.to_f/8}"
 
 			#criptografa os dados
-			arquivo = File.open("CamadaFisica/Cliente/chaveServidor.txt",'r')
+			arquivo = File.open("CamadaFisica/chaveCliente.txt",'r')
 			chave = arquivo.gets.chomp
 			criptografia = Gibberish::AES.new(chave)
 			pacoteC = criptografia.encrypt(pacote)
 			quadro= quadro + pacoteC + crc
 
 			#escreve em um arquivo o quadro ethernet
-			File.write("CamadaFisica/Cliente/quadro_roteador.txt", quadro)
+			File.write("CamadaFisica/quadro.txt", quadro)
 
-			#Agora vamos enviar o quadro para a camada fisica
+			#Agora vamos enviar o quadro para o roteador
 			@sock.puts quadro
-			#recebe resposta da camada fisica
+
+			#roteador tras a resposta do servidor
 			resp = @sock.gets
-			puts "\nQuadro recebido da camada fisica: #{resp} "
+			puts "\nQuadro recebido da camada fisica do roteador: #{resp} "
 			#separa o quadro recebido
 			preambulo = resp[0..63]
 			macDestino = converteBinToHex(resp[64..111])
@@ -173,22 +179,23 @@ class Cliente
 			crc = converteBinToHex(resp[resp.size-33..resp.size-1])
 
 			#descriptografa a mensagem criptografada
-		        puts "Aguardando desencriptografia!"
 			descriptografia = Gibberish::AES.new(chave)
+			puts "Aguardando desincriptografia!"
 			data = descriptografia.decrypt(dadoCriptografado)
+
 			#imprime o quadro recebido
 			puts "Preambulo : #{preambulo}"
 			puts "Mac Destino : #{macDestino}"
 			puts "Mac Origem : #{macOrigem}"
 			puts "Type : #{type}"
-			puts "Crarquivocrc}"
+			puts "Crc : #{crc}"
 			puts "Pacote : #{[data].pack("B*")}"
 			puts "Tamanho do pacote = #{[data].pack("B*").size}"
 
 			#escreve num arquivo os dados recebidos
-			File.write("CamadaFisica/Cliente/quadro_roteador_resposta_recebido.txt", data)
-			#envia para a camada de rede do roteador os dados recebidos
-			puts "\nQuadro enviado para a camada de rede do roteador: #{[data].pack('B*')}"
+			File.write("CamadaFisica/quadro_resposta_recebido.txt", data)
+			#envia para a camada de rede o pacote recebido
+			puts "\nPacote enviado para a camada de rede: #{[data].pack('B*')}"
 			@client.write [data].pack('B*')+"\n"
 		end
 		@client.close

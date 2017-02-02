@@ -42,7 +42,7 @@ class Cliente
 	def getMyMacAddress
 	begin
 		#no arquivo localizado em /sys/class/net/interface/address temos uma linha com o mac de acordo com a interface utilizada
-		caminho="/sys/class/net/#{@interface}/address"
+		caminho="/sys/class/net/#{@interface.chomp}/address"
 		mac = File.open(caminho,'r').gets
 		rescue
 			mac = "00:00:00:00:00:00"
@@ -180,6 +180,7 @@ class Cliente
 
 			#descriptografa a mensagem criptografada
 			descriptografia = Gibberish::AES.new(chave)
+			puts "Aguardando desencriptografia!"
 			data = descriptografia.decrypt(dadoCriptografado)
 
 			#imprime o quadro recebido

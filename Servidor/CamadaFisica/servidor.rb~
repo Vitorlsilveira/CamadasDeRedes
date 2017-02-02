@@ -2,18 +2,19 @@ require "readline"
 require 'socket'
 require 'digest/crc32'
 require "gibberish"
+
 class Servidor
   def initialize(port)
     @port=port
     #servidor aguarda conexao na porta port
 		@server=TCPServer.open(port)
     @sock1=nil
-    #loop para aguardar a camada de fisica ficar disponivel
-    puts "Aguardando camada de rede do roteador ficar disponivel na porta 1111"
+    #loop para aguardar a camada de rede ficar disponivel
+    puts "Aguardando camada de rede ficar disponivel na porta  4444"
 		while @sock1==nil
       begin
-			@sock1 = TCPSocket.open("localhost",1111)
-      puts "Conectado a camada de rede do roteador"
+			@sock1 = TCPSocket.open("localhost",4444)
+      puts "Conectado a camada de rede"
 			rescue
 				@sock1=nil
         sleep 1
@@ -43,12 +44,12 @@ class Servidor
 		return saida
 	end
 
-  def conectaFisica(dados)
-    #envia pacote para a camada de rede roteador
+  def conectaRede(dados)
+    #envia pacote para a camada de rede
+    puts "\nPacote enviado para a camada de rede: #{dados}"
     @sock1.write dados+"\n";
-    puts "\nQuadro enviado para a camada de rede do roteador: #{dados}"
     resposta = ""
-    #recebe resposta da camada de rede do roteador
+    #recebe resposta da camada de rede
     resposta=@sock1.recv(65536)
     return resposta
 	end
@@ -60,9 +61,9 @@ class Servidor
       Thread.start(@server.accept) do |client|
         puts "Conexao da camada fisica aceita"
         while true
-          #recebe da camada fisica do cliente
+          #recebe quadro do cliente fisico pelo roteador
           mensagem = client.gets
-          dados=mensagem
+          dados = mensagem
           puts "\nQuadro recebido da camada fisica: #{dados} "
           #separa o quadro recebido
           preambulo = dados[0..63]
@@ -71,10 +72,11 @@ class Servidor
           type = dados[160..175].to_i(2)
           dadoCriptografado = dados[176..dados.size-34]
     			crc = converteBinToHex(dados[dados.size-33..dados.size-1])
+
           #descriptografa a mensagem criptografada
-          arquivo = File.open("CamadaFisica/Servidor/chaveCliente.txt",'r')
+          arquivo = File.open("CamadaFisica/chaveServidor.txt",'r')
           chave = arquivo.gets.chomp
-	  puts "Aguardando desencriptografia!"
+	  puts "Aguardando desincriptografia!"
           descriptografia = Gibberish::AES.new(chave)
           data = descriptografia.decrypt(dadoCriptografado)
           #imprime o quadro recebido
@@ -82,29 +84,27 @@ class Servidor
       		puts "Mac Destino : #{macDestino}"
       		puts "Mac Origem : #{macOrigem}"
       		puts "Type : #{type}"
-          puts "Crc : #{crc}"
-      		puts "Pacote : #{[data].pack("B*")}"
-          puts "Pacote size = #{[data].pack("B*").size}"
-
+      		puts "Crc : #{crc}"
+          puts "Pacote : #{[data].pack("B*")}"
+          puts "Tamanho do pacote = #{[data].pack("B*").size}"
 
           #escreve num arquivo os dados recebidos
-          File.write("CamadaFisica/Servidor/quadro_roteador_recebido", data)
-          puts [data].pack("B*")
-          #envia para o roteador os dados descriptografados e aguarda resposta
-          resposta = conectaFisica([data].pack("B*"))
-          #imprime a resposta do roteador
-          puts "\nQuadro recebido da camada de rede do roteador: #{resposta}"
+          File.write("CamadaFisica/quadro_recebido", data)
+          #envia para camada de rede os dados e aguarda resposta
+          resposta = conectaRede([data].pack("B*"))
+          #imprime a resposta da camada de rede
+          puts "\nPacote recebido da camada de rede: #{resposta}"
           #converte a resposta para binario
           respostaBin = resposta.unpack("B*")[0].to_s
           #imprime a resposta em binario
           puts "Resposta em binario:#{respostaBin}"
 
           #enviando resposta para o cliente fisico
+
           #troca o mac de origem com o mac de destino
           aux=macDestino
           macDestino=macOrigem
           macOrigem=aux
-
           #transforma os mac para binario
           macDestinoBinario=converteHexToBin(macDestino)
           macOrigemBinario=converteHexToBin(macOrigem)
@@ -114,7 +114,10 @@ class Servidor
           #tipo indica o protocolo da camada superior e deve ser formatado para binario
           type=  converteHexToBin("0201")
           #Checksum utilizado para deteccao de erros
+
           crc = converteHexToBin(Digest::CRC32.hexdigest("#{respostaBin}"))
+
+          #imprime o frame ethernet (Quadro)
           quadro = preambulo+macDestinoBinario+macOrigemBinario+type
           puts "\nQuadro enviado para a camada fisica: #{quadro}"
           #imprime preambulo
@@ -144,11 +147,9 @@ class Servidor
           criptografia = Gibberish::AES.new(chave)
           pacoteC = criptografia.encrypt(respostaBin)
           quadro= quadro + pacoteC + crc
-
           #escreve a resposta num arquivo de resposta
-          File.write("CamadaFisica/Servidor/quadro_roteador_resposta.txt", quadro)
-
-          #envia para a camada fisica
+          File.write("CamadaFisica/quadro_resposta.txt", quadro)
+          #envia para o cliente fisico a resposta atraves do roteador
           client.puts quadro
         end
         client.close
@@ -156,5 +157,5 @@ class Servidor
     }
   end
 end
-servidor = Servidor.new(5553)
+servidor = Servidor.new(5554)
 servidor.executar

@@ -76,6 +76,7 @@ class Servidor
           #descriptografa a mensagem criptografada
           arquivo = File.open("CamadaFisica/chaveServidor.txt",'r')
           chave = arquivo.gets.chomp
+	  puts "Aguardando desencriptografia!"
           descriptografia = Gibberish::AES.new(chave)
           data = descriptografia.decrypt(dadoCriptografado)
           #imprime o quadro recebido

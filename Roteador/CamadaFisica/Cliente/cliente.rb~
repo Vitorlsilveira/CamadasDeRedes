@@ -173,7 +173,7 @@ class Cliente
 			crc = converteBinToHex(resp[resp.size-33..resp.size-1])
 
 			#descriptografa a mensagem criptografada
-		        puts "Aguardando desencriptografia!"
+		        puts "Aguardando desincriptografia!"
 			descriptografia = Gibberish::AES.new(chave)
 			data = descriptografia.decrypt(dadoCriptografado)
 			#imprime o quadro recebido
